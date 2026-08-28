@@ -1,54 +1,76 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
-  Database, 
+  WifiOff, 
   Scan, 
   Clock, 
   Sparkles, 
-  GitPullRequest, 
+  Building2, 
   HeartHandshake, 
   ShieldCheck, 
-  Radio,
-  Zap,
-  Globe2
+  MapPin,
+  CheckCircle2,
+  PhoneCall
 } from 'lucide-react';
+import gsap from 'gsap';
 
 export const FeaturesGrid = () => {
+  const gridRef = useRef(null);
+
   const features = [
     {
-      icon: <Database size={24} color="#0f4c81" />,
-      title: 'Offline-First IndexedDB Mesh',
-      desc: 'Operate seamlessly during rural blackouts. All patient profiles, prescriptions, and referral queues persist locally on the device with zero data loss.'
+      icon: <WifiOff size={24} color="#0f4c81" />,
+      title: 'Works 100% Without Internet',
+      desc: 'Never worry about power cuts or weak mobile signal in rural villages. All your records and doctor notes save instantly on your device and never get lost.'
     },
     {
       icon: <Scan size={24} color="#0d9488" />,
-      title: 'AI Neural OCR Slip Digitization',
-      desc: 'Instantly convert complex handwritten doctor prescriptions and lab test slips into structured JSON with automated drug entity extraction.'
+      title: 'Smart Paper Prescription Scanner',
+      desc: 'Take a quick smartphone photo of any doctor’s handwritten note or blood test slip. It reads the handwriting and types out the medicine names clearly.'
     },
     {
       icon: <Clock size={24} color="#0284c7" />,
-      title: 'Unified Longitudinal Health Graph',
-      desc: 'One connected record spanning Sub-Centres, PHCs, CHCs, and District Hospitals so no doctor ever works blind to past medical history.'
+      title: 'Lifetime Medical History in One Place',
+      desc: 'One connected record linking your local village clinic, town hospital, and city specialists so no doctor ever has to guess your past health problems.'
     },
     {
       icon: <Sparkles size={24} color="#d97706" />,
-      title: 'AI RAG Clinical Synthesis',
-      desc: 'Retrieval-Augmented Generation summarizes years of fragmented medical encounters into high-priority clinical trajectories and allergy alerts.'
+      title: 'Instant 2-Second Doctor Summary',
+      desc: 'Gives your doctor a clean, 1-page summary of your health conditions, past surgeries, and critical drug allergy warnings in just 2 seconds.'
     },
     {
-      icon: <GitPullRequest size={24} color="#16a34a" />,
-      title: 'Zero-Loss Referral Routing',
-      desc: 'Closed-loop inter-facility referrals with triage prioritization (Routine, Priority, Emergency) and automated patient token generation.'
+      icon: <Building2 size={24} color="#16a34a" />,
+      title: 'Direct Hospital Referrals & Bed Finder',
+      desc: 'Need a specialist or hospital bed? Get referred smoothly to government or private hospitals within 60km with your case notes already prepared.'
     },
     {
       icon: <HeartHandshake size={24} color="#dc2626" />,
-      title: 'Frontline ASHA Task Coordination',
-      desc: 'Empower village community health officers and ASHA workers with automated follow-up tasks, vitals tracking, and medication reminders.'
+      title: 'Doorstep Care by Village Health Workers',
+      desc: 'Empowers local ASHA workers with medicine timetables and visit reminders so every family member stays safe and healthy at home.'
     }
   ];
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.feature-card-anim', {
+        scrollTrigger: {
+          trigger: gridRef.current,
+          start: 'top 80%'
+        },
+        y: 35,
+        opacity: 0,
+        duration: 0.75,
+        stagger: 0.12,
+        ease: 'power3.out'
+      });
+    }, gridRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section 
       id="services"
+      ref={gridRef}
       style={{
         padding: '5rem 0',
         backgroundColor: 'var(--bg-page)',
@@ -57,20 +79,21 @@ export const FeaturesGrid = () => {
     >
       <div className="app-container">
         
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
+        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3.5rem auto' }}>
           <span className="badge badge-info" style={{ marginBottom: '0.75rem' }}>
-            Core Platform Capabilities
+            Built for Real Everyday Needs
           </span>
           <h2 style={{
-            fontSize: 'clamp(1.8rem, 3vw, 2.4rem)',
+            fontSize: 'clamp(1.85rem, 3.2vw, 2.45rem)',
             fontWeight: 800,
             color: 'var(--primary-navy-dark)',
-            marginBottom: '1rem'
+            marginBottom: '1rem',
+            lineHeight: 1.2
           }}>
-            Engineered for Rural Resilience & Clinical Precision
+            Everyday Features Built for You & Your Family
           </h2>
-          <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
-            Purpose-built technologies solving the unique challenges of rural connectivity, fragmented paper prescriptions, and multi-tier public hospital referrals.
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)' }}>
+            Simple, practical tools that make visiting clinics, finding hospitals within 60km, and managing family health stress-free.
           </p>
         </div>
 
@@ -80,7 +103,18 @@ export const FeaturesGrid = () => {
           gap: '1.5rem'
         }}>
           {features.map((feat, idx) => (
-            <div key={idx} className="med-card interactive" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div 
+              key={idx} 
+              className="med-card interactive feature-card-anim" 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.75rem',
+                border: '1px solid var(--border-medium)',
+                backgroundColor: '#ffffff'
+              }}
+            >
               <div style={{
                 width: '48px',
                 height: '48px',
@@ -95,11 +129,11 @@ export const FeaturesGrid = () => {
                 {feat.icon}
               </div>
 
-              <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.18rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
                 {feat.title}
               </h3>
 
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6', margin: 0 }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.65', margin: 0 }}>
                 {feat.desc}
               </p>
             </div>

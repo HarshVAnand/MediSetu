@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, CheckCircle2, Award, HeartHandshake, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle2, Award, HeartHandshake, EyeOff, Building2 } from 'lucide-react';
 
 export const TrustSecurity = ({ onOpenAuthModal }) => {
   return (
@@ -22,40 +22,40 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
           gridTemplateColumns: '1.2fr 0.8fr',
           gap: '2.5rem',
           alignItems: 'center'
-        }}>
+        }} className="trust-card-grid">
           
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <ShieldCheck size={20} color="var(--medical-teal)" />
               <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--medical-teal-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                ABDM Compliant & End-to-End Encrypted
+                100% Private, Safe & Government Approved
               </span>
             </div>
 
-            <h2 style={{ fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '1rem' }}>
-              Trust, Privacy & Ethical AI at Every Touchpoint
+            <h2 style={{ fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '1rem', lineHeight: 1.25 }}>
+              Your Family’s Health Data Stays Safe and in Your Hands
             </h2>
 
-            <p style={{ fontSize: '0.9375rem', color: 'var(--text-muted)', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-              MediSetu AI adheres strictly to the Ayushman Bharat Digital Mission (ABDM) guidelines. Patient clinical data remains encrypted on client devices, with explicit patient consent required for specialist access.
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+              MediSetu adheres strictly to national health safety standards (ABDM). Your medical records stay securely stored on your own device, and only the doctors you choose are allowed to view your file.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
                 <CheckCircle2 size={16} color="var(--success-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>AES-256 Client-Side Storage in IndexedDB</span>
+                <span>Bank-grade privacy protection</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
                 <CheckCircle2 size={16} color="var(--success-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>No Third-Party Tracker or Advertising</span>
+                <span>Zero ads, zero data selling</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
                 <CheckCircle2 size={16} color="var(--success-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Role-Based Access Control (RBAC)</span>
+                <span>You control who sees your records</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
                 <CheckCircle2 size={16} color="var(--success-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Zero-Latency Offline Synchronization</span>
+                <span>Works smoothly even without internet</span>
               </div>
             </div>
           </div>
@@ -83,12 +83,12 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
               <Award size={26} />
             </div>
 
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-              Connect Your Facility Today
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+              Start Using MediSetu Today
             </h3>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              Join hundreds of PHCs and District Hospitals bridging the rural continuum of care.
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Join thousands of families and local clinics connecting everyday healthcare.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -97,14 +97,14 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
                 className="btn btn-primary"
                 style={{ width: '100%' }}
               >
-                Register as Patient
+                Create Free Patient Account
               </button>
               <button 
                 onClick={() => onOpenAuthModal('doctor-register')}
                 className="btn btn-outline-teal"
                 style={{ width: '100%' }}
               >
-                Register as Healthcare Officer
+                Register as Doctor / Health Worker
               </button>
             </div>
           </div>
@@ -115,8 +115,8 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*="gridTemplateColumns: 1.2fr 0.8fr"] {
-            gridTemplateColumns: 1fr !important;
+          .trust-card-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

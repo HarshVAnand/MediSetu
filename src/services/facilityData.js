@@ -1,159 +1,542 @@
-// Rural Healthcare Facility Data Network (OpenStreetMap / Leaflet compatible)
-// Representative network spanning Village Sub-Centres -> PHCs -> CHCs -> District Hospitals -> Medical College
+// Rural & Town Healthcare Facility Network (Government & Private Hospitals)
+// Covers up to 60km - 80km radius with real-time geolocation distance calculations
 
-export const FACILITY_TIERS = {
-  SUBCENTRE: 'Sub-Centre',
-  PHC: 'Primary Health Centre (PHC)',
-  CHC: 'Community Health Centre (CHC)',
-  DISTRICT: 'District Hospital (DH)',
-  TERTIARY: 'Tertiary Medical College'
-};
+// Haversine formula to compute distance between two coordinates in kilometers
+export function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0;
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return parseFloat((R * c).toFixed(1));
+}
+
+// Preset User Regions for instant location switching
+export const PRESET_REGIONS = [
+  { id: 'kolar-central', name: 'Kolar City (Centre)', lat: 13.1367, lng: 78.1340 },
+  { id: 'bangarapet', name: 'Bangarapet Town', lat: 12.9774, lng: 78.1966 },
+  { id: 'hoskote', name: 'Hoskote / East Bengaluru', lat: 13.0700, lng: 77.7981 },
+  { id: 'malur', name: 'Malur Town', lat: 13.0039, lng: 77.9405 },
+  { id: 'mulbagal', name: 'Mulbagal Rural', lat: 13.1648, lng: 78.3942 },
+  { id: 'chintamani', name: 'Chintamani Taluk', lat: 13.4000, lng: 78.0667 },
+  { id: 'srinivaspur', name: 'Srinivaspur Town', lat: 13.3385, lng: 78.2144 }
+];
 
 export const INITIAL_FACILITIES = [
+  // ================= GOVERNMENT HOSPITALS =================
   {
-    id: 'fac-phc-01',
-    name: 'Kolar Sub-Divisional Primary Health Centre',
-    tier: FACILITY_TIERS.PHC,
-    type: 'PHC',
-    lat: 13.1367,
-    lng: 78.1291,
-    address: 'Main Road, Kolar Rural, Karnataka 563101',
-    contact: '+91 8152 222104',
-    distanceKm: 2.4,
-    emergency24x7: true,
-    totalBeds: 12,
-    availableBeds: 5,
-    icuAvailable: false,
-    doctorsOnDuty: [
-      { name: 'Dr. Ramesh Kumar, MBBS', role: 'Medical Officer (General)' },
-      { name: 'Dr. Ananya Rao, MBBS', role: 'Community Health Physician' }
-    ],
-    nursesOnDuty: 4,
-    ambulanceAvailable: true,
-    specialties: ['General Medicine', 'Maternal & Child Health', 'Immunization', 'Basic Pathology', 'NCD Screening'],
-    operatingHours: '24 Hours Emergency / 8:00 AM - 4:00 PM OPD',
-    teleconsultEnabled: true
-  },
-  {
-    id: 'fac-sub-01',
-    name: 'Vokkaleri Village Ayushman Arogya Mandir (Sub-Centre)',
-    tier: FACILITY_TIERS.SUBCENTRE,
-    type: 'Sub-Centre',
-    lat: 13.0850,
-    lng: 78.1620,
-    address: 'Near Gram Panchayat, Vokkaleri Village, Kolar 563130',
-    contact: '+91 8152 245012',
-    distanceKm: 6.8,
-    emergency24x7: false,
-    totalBeds: 2,
-    availableBeds: 2,
-    icuAvailable: false,
-    doctorsOnDuty: [
-      { name: 'Smt. Lakshmi Devi', role: 'Community Health Officer (CHO)' },
-      { name: 'Smt. Kavitha M.', role: 'Senior Auxiliary Nurse Midwife (ANM)' }
-    ],
-    nursesOnDuty: 2,
-    ambulanceAvailable: false,
-    specialties: ['Antenatal Care', 'BP & Blood Sugar Screening', 'Basic First Aid', 'Essential Drug Dispensing'],
-    operatingHours: '9:00 AM - 4:30 PM (Mon-Sat)',
-    teleconsultEnabled: true
-  },
-  {
-    id: 'fac-chc-01',
-    name: 'Bangarapet Community Health Centre (CHC)',
-    tier: FACILITY_TIERS.CHC,
-    type: 'CHC',
-    lat: 12.9774,
-    lng: 78.1966,
-    address: 'Station Road, Bangarapet, Karnataka 563114',
-    contact: '+91 8153 255220',
-    distanceKm: 14.2,
-    emergency24x7: true,
-    totalBeds: 30,
-    availableBeds: 11,
-    icuAvailable: false,
-    doctorsOnDuty: [
-      { name: 'Dr. Suresh Babu, MD', role: 'Physician / Specialist' },
-      { name: 'Dr. Deepa S., MS', role: 'Obstetrician & Gynaecologist' },
-      { name: 'Dr. Harish N., DNB', role: 'Paediatrician' }
-    ],
-    nursesOnDuty: 8,
-    ambulanceAvailable: true,
-    specialties: ['General Surgery', 'Obstetrics & Gynaecology', 'Paediatrics', 'Emergency Trauma', 'Digital X-Ray', '24x7 Lab'],
-    operatingHours: '24 Hours Emergency & Inpatient / 9:00 AM - 4:00 PM OPD',
-    teleconsultEnabled: true
-  },
-  {
-    id: 'fac-dh-01',
-    name: 'SNR District Hospital & Trauma Centre',
-    tier: FACILITY_TIERS.DISTRICT,
-    type: 'District Hospital',
+    id: 'fac-gov-dh-01',
+    name: 'SNR Government District Hospital & Trauma Centre',
+    category: 'Government',
+    facilityType: 'District Hospital',
     lat: 13.1332,
     lng: 78.1388,
     address: 'Hospital Road, Gulpet, Kolar, Karnataka 563101',
     contact: '+91 8152 222340',
-    distanceKm: 4.1,
     emergency24x7: true,
+    ayushmanBharatAccepted: true, // Free/Cashless Govt Scheme
     totalBeds: 250,
-    availableBeds: 42,
-    icuAvailable: true,
+    availableBeds: 48,
+    icuBeds: 18,
+    availableIcuBeds: 6,
+    oxygenBeds: 60,
     doctorsOnDuty: [
-      { name: 'Dr. Preethi Hegde, MD, DM', role: 'Consultant Cardiologist' },
-      { name: 'Dr. Vikramaditya, MS, MCh', role: 'Orthopaedic & Trauma Surgeon' },
-      { name: 'Dr. Sunita Murthy, MD', role: 'Chief Pulmonologist & Critical Care' }
+      { name: 'Dr. Preethi Hegde, MD', role: 'Heart Specialist (Cardiologist)' },
+      { name: 'Dr. Vikramaditya, MS', role: 'Bone & Joint Specialist (Orthopaedic)' },
+      { name: 'Dr. Sunita Murthy, MD', role: 'Chest & Breathing Specialist (Pulmonologist)' }
     ],
     nursesOnDuty: 35,
     ambulanceAvailable: true,
-    specialties: ['Cardiology', 'Pulmonology', 'Orthopaedics', 'ICU & Critical Care', 'Blood Bank', 'CT Scan & MRI', 'Dialysis', 'NICU'],
-    operatingHours: '24x7 Round the Clock Emergency, ICU & Trauma',
-    teleconsultEnabled: true
+    servicesOffered: [
+      '24/7 Emergency Care',
+      'Free Medicines',
+      'Heart Checkups',
+      'X-Ray & Ultrasound',
+      'Blood Bank',
+      'Delivery & Maternity Care',
+      'ICU & Oxygen Beds'
+    ],
+    operatingHours: 'Open 24 Hours (Emergency & Inpatient) / OPD: 9 AM - 4 PM'
   },
   {
-    id: 'fac-phc-02',
-    name: 'Mulbagal Rural Primary Health Centre',
-    tier: FACILITY_TIERS.PHC,
-    type: 'PHC',
+    id: 'fac-gov-phc-01',
+    name: 'Kolar Sub-Divisional Government Health Centre',
+    category: 'Government',
+    facilityType: 'Primary Health Centre',
+    lat: 13.1367,
+    lng: 78.1291,
+    address: 'Main Road, Kolar Rural, Karnataka 563101',
+    contact: '+91 8152 222104',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 16,
+    availableBeds: 7,
+    icuBeds: 0,
+    availableIcuBeds: 0,
+    oxygenBeds: 4,
+    doctorsOnDuty: [
+      { name: 'Dr. Ramesh Kumar, MBBS', role: 'General Family Doctor' },
+      { name: 'Dr. Ananya Rao, MBBS', role: 'Women & Child Health Doctor' }
+    ],
+    nursesOnDuty: 4,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      'General Checkup & Fever Care',
+      'Mother & Baby Care',
+      'Free Childhood Vaccines',
+      'Blood Pressure & Sugar Testing',
+      'Free Essential Medicines'
+    ],
+    operatingHours: '24 Hours Emergency / Regular OPD: 8:30 AM - 4:30 PM'
+  },
+  {
+    id: 'fac-gov-chc-01',
+    name: 'Bangarapet Community Government Hospital',
+    category: 'Government',
+    facilityType: 'Community Health Centre',
+    lat: 12.9774,
+    lng: 78.1966,
+    address: 'Station Road, Bangarapet, Karnataka 563114',
+    contact: '+91 8153 255220',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 40,
+    availableBeds: 14,
+    icuBeds: 4,
+    availableIcuBeds: 2,
+    oxygenBeds: 12,
+    doctorsOnDuty: [
+      { name: 'Dr. Suresh Babu, MD', role: 'Senior Family Physician' },
+      { name: 'Dr. Deepa S., MS', role: 'Women\'s Health & Delivery Specialist' },
+      { name: 'Dr. Harish N., DNB', role: 'Children\'s Specialist (Paediatrician)' }
+    ],
+    nursesOnDuty: 10,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Emergency Room',
+      'Delivery & Maternity Ward',
+      'Children\'s Care',
+      'Minor Surgery',
+      'Digital X-Ray & Lab Tests'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-gov-malur-01',
+    name: 'Malur Taluk Government General Hospital',
+    category: 'Government',
+    facilityType: 'Taluk Hospital',
+    lat: 13.0039,
+    lng: 77.9405,
+    address: 'Main Road, Malur Town, Karnataka 563130',
+    contact: '+91 8151 232115',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 60,
+    availableBeds: 21,
+    icuBeds: 6,
+    availableIcuBeds: 3,
+    oxygenBeds: 16,
+    doctorsOnDuty: [
+      { name: 'Dr. Manjunath Reddy, MS', role: 'General Surgeon' },
+      { name: 'Dr. Shobha K., MD', role: 'Women\'s Health & Delivery Doctor' }
+    ],
+    nursesOnDuty: 12,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Emergency Care',
+      'Ayushman Bharat Cashless Care',
+      'Maternity & Newborn Ward',
+      'Ultrasound & Lab Tests'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-gov-mulbagal-01',
+    name: 'Mulbagal Government Rural Hospital',
+    category: 'Government',
+    facilityType: 'Rural Hospital',
     lat: 13.1648,
     lng: 78.3942,
     address: 'NH 75 Bypass, Mulbagal, Karnataka 563131',
     contact: '+91 8159 242011',
-    distanceKm: 28.5,
     emergency24x7: true,
-    totalBeds: 10,
-    availableBeds: 4,
-    icuAvailable: false,
+    ayushmanBharatAccepted: true,
+    totalBeds: 30,
+    availableBeds: 9,
+    icuBeds: 2,
+    availableIcuBeds: 1,
+    oxygenBeds: 8,
     doctorsOnDuty: [
-      { name: 'Dr. Farooq Ahmed, MBBS', role: 'Medical Officer' }
+      { name: 'Dr. Farooq Ahmed, MBBS', role: 'General Doctor' },
+      { name: 'Dr. Geetha Bai, DGO', role: 'Maternity Specialist' }
     ],
-    nursesOnDuty: 3,
+    nursesOnDuty: 6,
     ambulanceAvailable: true,
-    specialties: ['General Medicine', 'Maternal Health', 'Tuberculosis & Leprosy Care', 'Child Immunization'],
-    operatingHours: '24 Hours Emergency / 8:30 AM - 4:30 PM OPD',
-    teleconsultEnabled: true
+    servicesOffered: [
+      '24/7 Accident & Emergency',
+      'Free Normal Deliveries',
+      'Childhood Vaccines',
+      'Diabetes & BP Clinic'
+    ],
+    operatingHours: 'Open 24 Hours'
   },
   {
-    id: 'fac-tertiary-01',
-    name: 'Sri Devaraj Urs Medical College & Apex Research Hospital',
-    tier: FACILITY_TIERS.TERTIARY,
-    type: 'Tertiary Medical College',
+    id: 'fac-gov-sub-01',
+    name: 'Vokkaleri Village Government Health Post (Arogya Mandir)',
+    category: 'Government',
+    facilityType: 'Village Clinic',
+    lat: 13.0850,
+    lng: 78.1620,
+    address: 'Near Gram Panchayat, Vokkaleri Village, Kolar 563130',
+    contact: '+91 8152 245012',
+    emergency24x7: false,
+    ayushmanBharatAccepted: true,
+    totalBeds: 4,
+    availableBeds: 3,
+    icuBeds: 0,
+    availableIcuBeds: 0,
+    oxygenBeds: 1,
+    doctorsOnDuty: [
+      { name: 'Smt. Lakshmi Devi', role: 'Community Health Officer' },
+      { name: 'Smt. Kavitha M.', role: 'Senior Village Health Nurse' }
+    ],
+    nursesOnDuty: 2,
+    ambulanceAvailable: false,
+    servicesOffered: [
+      'Blood Pressure & Sugar Checkup',
+      'Pregnancy Care & Testing',
+      'First Aid & Dressing',
+      'Free Monthly Tablets'
+    ],
+    operatingHours: '9:00 AM - 4:30 PM (Mon-Sat)'
+  },
+  {
+    id: 'fac-gov-chintamani-01',
+    name: 'Chintamani Government Taluk Hospital',
+    category: 'Government',
+    facilityType: 'Taluk Hospital',
+    lat: 13.4000,
+    lng: 78.0667,
+    address: 'Court Road, Chintamani, Karnataka 563125',
+    contact: '+91 8154 252100',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 80,
+    availableBeds: 28,
+    icuBeds: 8,
+    availableIcuBeds: 4,
+    oxygenBeds: 20,
+    doctorsOnDuty: [
+      { name: 'Dr. Narayanaswamy, MD', role: 'General Medicine Doctor' },
+      { name: 'Dr. Radhika P., MS', role: 'Gynecologist' }
+    ],
+    nursesOnDuty: 18,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Emergency & Casualty',
+      'Operation Theatre',
+      'Ayushman Bharat Scheme',
+      'Digital X-Ray & Blood Bank'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-gov-srinivas-01',
+    name: 'Srinivaspur Government General Hospital',
+    category: 'Government',
+    facilityType: 'Taluk Hospital',
+    lat: 13.3385,
+    lng: 78.2144,
+    address: 'Kolar Road, Srinivaspur, Karnataka 563135',
+    contact: '+91 8157 245230',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 50,
+    availableBeds: 16,
+    icuBeds: 4,
+    availableIcuBeds: 2,
+    oxygenBeds: 12,
+    doctorsOnDuty: [
+      { name: 'Dr. Venkatachalapathy, MBBS', role: 'Chief Medical Officer' },
+      { name: 'Dr. Latha R., MBBS', role: 'Family Health Doctor' }
+    ],
+    nursesOnDuty: 10,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24 Hours Emergency',
+      'Maternity Ward',
+      'Childhood Immunization',
+      'Government Free Schemes'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+
+  // ================= PRIVATE HOSPITALS =================
+  {
+    id: 'fac-pvt-urs-01',
+    name: 'Sri Devaraj Urs Super Speciality Hospital & Medical College',
+    category: 'Private',
+    facilityType: 'Super-Specialty Hospital',
     lat: 13.1554,
     lng: 78.1755,
-    address: 'Tamaka, Kolar, Karnataka 563103',
+    address: 'Tamaka, Kolar-Bangalore Highway, Karnataka 563103',
     contact: '+91 8152 243003',
-    distanceKm: 8.5,
     emergency24x7: true,
+    ayushmanBharatAccepted: true, // Accepts Ayushman Bharat & Private Insurance
     totalBeds: 750,
-    availableBeds: 118,
-    icuAvailable: true,
+    availableBeds: 142,
+    icuBeds: 60,
+    availableIcuBeds: 18,
+    oxygenBeds: 120,
     doctorsOnDuty: [
-      { name: 'Prof. Dr. Rajeshwar Swamy, MD, DM', role: 'Head of Neurology' },
-      { name: 'Dr. Meera Chandrasekhar, MD, DNB', role: 'Endocrinologist' },
-      { name: 'Dr. Arvind Sastry, MCh', role: 'Cardiothoracic Surgeon' }
+      { name: 'Prof. Dr. Rajeshwar Swamy, MD, DM', role: 'Brain & Nerve Specialist (Neurologist)' },
+      { name: 'Dr. Meera Chandrasekhar, MD', role: 'Diabetes & Hormone Specialist' },
+      { name: 'Dr. Arvind Sastry, MCh', role: 'Heart Surgeon (Cardiothoracic)' },
+      { name: 'Dr. Shilpa Gowda, MS', role: 'Senior Women\'s Care Specialist' }
     ],
     nursesOnDuty: 95,
     ambulanceAvailable: true,
-    specialties: ['Cardiology', 'Neurology', 'Nephrology', 'Oncology', 'Super-Specialty Surgery', 'Advanced Telemedicine Hub', 'Level-1 Trauma'],
-    operatingHours: '24x7 Super-Specialty Medical Care',
-    teleconsultEnabled: true
+    servicesOffered: [
+      '24/7 Level-1 Emergency & Trauma',
+      'Heart Surgeries & Angioplasty',
+      'Kidney Dialysis Centre',
+      'MRI & Advanced CT Scan',
+      'Cancer Treatment',
+      'ICU, NICU & Ventilators',
+      'Cashless Insurance & Ayushman Bharat'
+    ],
+    operatingHours: 'Open 24x7 Round the Clock'
+  },
+  {
+    id: 'fac-pvt-manipal-01',
+    name: 'Manipal Outreach Clinic & Multi-Specialty Hospital',
+    category: 'Private',
+    facilityType: 'Multi-Specialty Hospital',
+    lat: 13.0720,
+    lng: 77.7995,
+    address: 'Old Madras Road, Hoskote, Karnataka 562114',
+    contact: '+91 80 2845 6789',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 120,
+    availableBeds: 34,
+    icuBeds: 20,
+    availableIcuBeds: 7,
+    oxygenBeds: 40,
+    doctorsOnDuty: [
+      { name: 'Dr. Sandeep Nair, MD', role: 'Heart & Blood Pressure Specialist' },
+      { name: 'Dr. Priya Varma, MS', role: 'General & Laparoscopic Surgeon' },
+      { name: 'Dr. Amit Joshi, MD', role: 'Senior Child Doctor' }
+    ],
+    nursesOnDuty: 30,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Emergency & Ambulance',
+      'Intensive Care Unit (ICU)',
+      'Digital X-Ray & MRI',
+      'Laparoscopic Surgeries',
+      'Cashless Health Insurance'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-pvt-apollo-01',
+    name: 'Apollo Clinic & Emergency Medical Centre',
+    category: 'Private',
+    facilityType: 'Specialty Clinic & Daycare',
+    lat: 13.1420,
+    lng: 78.1310,
+    address: 'Bangalore Road, Near Clock Tower, Kolar 563101',
+    contact: '+91 8152 228900',
+    emergency24x7: true,
+    ayushmanBharatAccepted: false,
+    totalBeds: 25,
+    availableBeds: 8,
+    icuBeds: 4,
+    availableIcuBeds: 2,
+    oxygenBeds: 8,
+    doctorsOnDuty: [
+      { name: 'Dr. Karthik Rao, MD', role: 'Family Health & Diabetes Specialist' },
+      { name: 'Dr. Sowmya B., DNB', role: 'Skin & Allergy Specialist' }
+    ],
+    nursesOnDuty: 8,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Urgent Care',
+      'Fast Blood Tests & ECG',
+      'Diabetes & Heart Screening',
+      'Specialist Video Consults'
+    ],
+    operatingHours: '24 Hours Emergency / 8 AM - 9 PM OPD'
+  },
+  {
+    id: 'fac-pvt-narayana-01',
+    name: 'Narayana Health Community Heart & Kidney Care',
+    category: 'Private',
+    facilityType: 'Super-Specialty Hospital',
+    lat: 13.0650,
+    lng: 77.8100,
+    address: 'Near Toll Plaza, NH 75, Hoskote-Kolar Highway 562114',
+    contact: '+91 80 7122 2222',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 180,
+    availableBeds: 52,
+    icuBeds: 35,
+    availableIcuBeds: 11,
+    oxygenBeds: 50,
+    doctorsOnDuty: [
+      { name: 'Dr. Vivek Murthy, MS, MCh', role: 'Senior Heart Specialist' },
+      { name: 'Dr. Ananya Sen, MD, DM', role: 'Kidney Specialist (Nephrologist)' }
+    ],
+    nursesOnDuty: 45,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Heart Attack Emergency Unit',
+      'Kidney Dialysis (3 shifts)',
+      'ICU & Cardiac Care',
+      'Ayushman Bharat & Arogya Karnataka'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-pvt-sai-01',
+    name: 'Sri Sathya Sai General Hospital (Free & Charitable)',
+    category: 'Private',
+    facilityType: 'Charitable Multi-Specialty',
+    lat: 12.9860,
+    lng: 77.7580,
+    address: 'Whitefield Road, East Bangalore Rural Border 560066',
+    contact: '+91 80 2841 1500',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 320,
+    availableBeds: 68,
+    icuBeds: 24,
+    availableIcuBeds: 8,
+    oxygenBeds: 70,
+    doctorsOnDuty: [
+      { name: 'Dr. Govind Swaminathan, MS', role: 'Orthopaedic Surgeon' },
+      { name: 'Dr. Jayashree Ram, MD', role: 'Head of Maternity & Child Health' }
+    ],
+    nursesOnDuty: 50,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '100% Free Surgeries & Medicines',
+      '24/7 Emergency & Maternity',
+      'Eye Care & Cataract Surgeries',
+      'Childhood Healthcare'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-pvt-santhiram-01',
+    name: 'Santhiram Private Hospital & Maternity Home',
+    category: 'Private',
+    facilityType: 'Maternity & General Hospital',
+    lat: 12.9810,
+    lng: 78.1920,
+    address: 'Vivekananda Nagar, Bangarapet, Karnataka 563114',
+    contact: '+91 8153 256880',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 35,
+    availableBeds: 12,
+    icuBeds: 4,
+    availableIcuBeds: 2,
+    oxygenBeds: 10,
+    doctorsOnDuty: [
+      { name: 'Dr. Santhosh Kumar, MD', role: 'Family Doctor & Physician' },
+      { name: 'Dr. Ramya S., MS', role: 'Women\'s Health & Delivery Doctor' }
+    ],
+    nursesOnDuty: 9,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Maternity & Delivery',
+      'Paediatric Care',
+      'Inpatient Hospitalization',
+      'Pharmacy & Lab'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-pvt-lifecare-01',
+    name: 'Lifecare Multi-Specialty Hospital & Dialysis Center',
+    category: 'Private',
+    facilityType: 'Multi-Specialty Hospital',
+    lat: 13.0080,
+    lng: 77.9350,
+    address: 'Near Bus Stand, Malur, Karnataka 563130',
+    contact: '+91 8151 234500',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 45,
+    availableBeds: 15,
+    icuBeds: 6,
+    availableIcuBeds: 3,
+    oxygenBeds: 14,
+    doctorsOnDuty: [
+      { name: 'Dr. Kiran Gowda, MD', role: 'Critical Care Specialist' },
+      { name: 'Dr. Archana M., MBBS', role: 'General Medicine Physician' }
+    ],
+    nursesOnDuty: 11,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Casualty & ICU',
+      'Dialysis Services',
+      'Private Insurance & TPA Cashless',
+      'Digital Lab & Pharmacy'
+    ],
+    operatingHours: 'Open 24 Hours'
   }
 ];
+
+// Helper to filter and sort facilities by user location and radius
+export function getFacilitiesWithinRadius(userLat, userLng, radiusKm = 60, filters = {}) {
+  const { category = 'ALL', emergencyOnly = false, icuOnly = false, searchQuery = '' } = filters;
+
+  return INITIAL_FACILITIES.map(fac => {
+    const dist = calculateDistance(userLat, userLng, fac.lat, fac.lng);
+    return {
+      ...fac,
+      distanceKm: dist,
+      isWithinRadius: dist <= radiusKm
+    };
+  })
+    .filter(fac => {
+      // Radius check (default 60km)
+      if (radiusKm && fac.distanceKm > radiusKm) return false;
+
+      // Category check: Government vs Private
+      if (category !== 'ALL' && fac.category !== category) return false;
+
+      // Emergency check
+      if (emergencyOnly && !fac.emergency24x7) return false;
+
+      // ICU check
+      if (icuOnly && (!fac.icuBeds || fac.availableIcuBeds <= 0)) return false;
+
+      // Search query check
+      if (searchQuery && searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesName = fac.name.toLowerCase().includes(q);
+        const matchesAddress = fac.address.toLowerCase().includes(q);
+        const matchesType = fac.facilityType.toLowerCase().includes(q);
+        const matchesService = fac.servicesOffered.some(s => s.toLowerCase().includes(q));
+        const matchesDoctor = fac.doctorsOnDuty.some(d => d.name.toLowerCase().includes(q) || d.role.toLowerCase().includes(q));
+        if (!matchesName && !matchesAddress && !matchesType && !matchesService && !matchesDoctor) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => a.distanceKm - b.distanceKm); // Closest first
+}

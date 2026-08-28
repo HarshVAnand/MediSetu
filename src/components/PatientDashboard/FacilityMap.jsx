@@ -1,43 +1,79 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { INITIAL_FACILITIES } from '../../services/facilityData.js';
-import { MapPin, Phone, Bed, Stethoscope, Search, Navigation, Building2 } from 'lucide-react';
+import { 
+  INITIAL_FACILITIES, 
+  PRESET_REGIONS, 
+  getFacilitiesWithinRadius, 
+  calculateDistance 
+} from '../../services/facilityData.js';
+import { 
+  MapPin, 
+  Phone, 
+  Bed, 
+  Stethoscope, 
+  Search, 
+  Navigation, 
+  Building2, 
+  Compass, 
+  Radio, 
+  AlertCircle 
+} from 'lucide-react';
 
 export const FacilityMap = () => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
-  const [selectedTier, setSelectedTier] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFacility, setSelectedFacility] = useState(INITIAL_FACILITIES[0]);
+  const circleRef = useRef(null);
+  const userMarkerRef = useRef(null);
 
-  const createIcon = (type) => {
-    let color = '#0d9488';
-    if (type === 'District Hospital') color = '#0f4c81';
-    else if (type === 'CHC') color = '#0284c7';
-    else if (type === 'Sub-Centre') color = '#16a34a';
+  const [userLocation, setUserLocation] = useState({
+    name: 'Kolar City (Centre)',
+    lat: 13.1367,
+    lng: 78.1340
+  });
+
+  const [radiusKm, setRadiusKm] = useState(60);
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFacility, setSelectedFacility] = useState(null);
+
+  const facilities = getFacilitiesWithinRadius(
+    userLocation.lat,
+    userLocation.lng,
+    radiusKm,
+    {
+      category: categoryFilter,
+      searchQuery
+    }
+  );
+
+  const currentFacility = selectedFacility || facilities[0] || null;
+
+  const createIcon = (fac) => {
+    const isGovt = fac.category === 'Government';
+    const color = isGovt ? '#0d9488' : '#0f4c81';
 
     return L.divIcon({
       className: 'custom-leaflet-pin',
       html: `
         <div style="
           background-color: ${color};
-          width: 30px;
-          height: 30px;
+          width: 32px;
+          height: 32px;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+          box-shadow: 0 3px 8px rgba(0,0,0,0.3);
           border: 2px solid #ffffff;
         ">
-          <div style="transform: rotate(45deg); color: #fff; font-weight: 800; font-size: 12px;">+</div>
+          <div style="transform: rotate(45deg); color: #fff; font-size: 13px;">${isGovt ? '🏛️' : '🏥'}</div>
         </div>
       `,
-      iconSize: [30, 30],
-      iconAnchor: [15, 30],
-      popupAnchor: [0, -30]
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
     });
   };
 
@@ -46,8 +82,8 @@ export const FacilityMap = () => {
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
-        center: [13.1332, 78.1388],
-        zoom: 11,
+        center: [userLocation.lat, userLocation.lng],
+        zoom: 10,
         scrollWheelZoom: false
       });
 
@@ -60,26 +96,43 @@ export const FacilityMap = () => {
     }
 
     const map = mapInstanceRef.current;
+    map.setView([userLocation.lat, userLocation.lng], radiusKm <= 25 ? 12 : 10);
 
+    // Clear previous
     markersRef.current.forEach(m => map.removeLayer(m));
     markersRef.current = [];
+    if (circleRef.current) map.removeLayer(circleRef.current);
+    if (userMarkerRef.current) map.removeLayer(userMarkerRef.current);
 
-    const filtered = INITIAL_FACILITIES.filter(fac => {
-      const matchesTier = selectedTier === 'ALL' || fac.type.toLowerCase().includes(selectedTier.toLowerCase());
-      const matchesQuery = !searchQuery || fac.name.toLowerCase().includes(searchQuery.toLowerCase()) || fac.specialties.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesTier && matchesQuery;
-    });
+    // Draw user location & 60km boundary
+    userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+      icon: L.divIcon({
+        className: 'user-pin',
+        html: `<div style="width:16px;height:16px;background:#0284c7;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      })
+    }).addTo(map);
 
-    filtered.forEach(fac => {
-      const icon = createIcon(fac.type);
+    circleRef.current = L.circle([userLocation.lat, userLocation.lng], {
+      radius: radiusKm * 1000,
+      color: '#0d9488',
+      fillColor: '#14b8a6',
+      fillOpacity: 0.08,
+      weight: 2,
+      dashArray: '5, 8'
+    }).addTo(map);
+
+    facilities.forEach(fac => {
+      const icon = createIcon(fac);
       const marker = L.marker([fac.lat, fac.lng], { icon }).addTo(map);
 
       marker.bindPopup(`
-        <div style="padding: 8px; font-family: inherit;">
+        <div style="padding: 6px; font-family: inherit; font-size: 12px;">
           <strong style="color: #0f172a; font-size: 13px;">${fac.name}</strong>
-          <div style="font-size: 11px; color: #0d9488; margin-top: 3px;">${fac.type} • ${fac.distanceKm} km</div>
-          <div style="font-size: 11px; color: #64748b; margin: 4px 0;">${fac.address}</div>
-          <div style="font-size: 11px; color: #16a34a; font-weight: 600;">Available Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
+          <div style="font-size: 11px; color: #0d9488; margin-top: 2px;">${fac.category} • ${fac.distanceKm} km away</div>
+          <div style="font-size: 11px; color: #64748b; margin: 3px 0;">${fac.address}</div>
+          <div style="font-size: 11px; color: #16a34a; font-weight: 700;">Free Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
         </div>
       `);
 
@@ -87,7 +140,7 @@ export const FacilityMap = () => {
       markersRef.current.push(marker);
     });
 
-  }, [selectedTier, searchQuery]);
+  }, [userLocation, radiusKm, categoryFilter, searchQuery]);
 
   return (
     <div className="med-card" style={{ padding: '1.75rem' }}>
@@ -95,10 +148,10 @@ export const FacilityMap = () => {
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-light)' }}>
         <div>
-          <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>OpenStreetMap Navigation</span>
+          <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>60km Network Map</span>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <MapPin size={20} color="var(--medical-teal)" />
-            <span>Find Rural Healthcare Facilities</span>
+            <span>Find Government & Private Hospitals Near You</span>
           </h3>
         </div>
 
@@ -108,7 +161,7 @@ export const FacilityMap = () => {
           <input 
             type="text"
             className="form-input"
-            placeholder="Search PHC, CHC, or specialty..."
+            placeholder="Search hospital or doctor specialty..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ paddingLeft: '2rem', fontSize: '0.8125rem' }}
@@ -116,40 +169,68 @@ export const FacilityMap = () => {
         </div>
       </div>
 
-      {/* FILTER TABS */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-        {['ALL', 'PHC', 'CHC', 'District Hospital', 'Sub-Centre'].map(tier => (
-          <button
-            key={tier}
-            onClick={() => setSelectedTier(tier)}
-            style={{
-              background: selectedTier === tier ? 'var(--primary-navy)' : 'var(--bg-page)',
-              color: selectedTier === tier ? '#ffffff' : 'var(--text-main)',
-              border: '1px solid var(--border-medium)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            {tier === 'ALL' ? 'All Health Centers' : tier}
-          </button>
-        ))}
+      {/* LOCATION & RADIUS FILTER CHIPS */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+        
+        {/* Category Filters */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {['ALL', 'Government', 'Private'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              style={{
+                background: categoryFilter === cat ? 'var(--primary-navy)' : 'var(--bg-page)',
+                color: categoryFilter === cat ? '#ffffff' : 'var(--text-main)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.35rem 0.75rem',
+                fontSize: '0.78125rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              {cat === 'ALL' ? 'All Hospitals' : cat === 'Government' ? '🏛️ Government' : '🏥 Private'}
+            </button>
+          ))}
+        </div>
+
+        {/* Radius Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.78125rem', fontWeight: 700, color: 'var(--text-muted)' }}>Radius:</span>
+          {[25, 50, 60, 80].map(km => (
+            <button
+              key={km}
+              onClick={() => setRadiusKm(km)}
+              style={{
+                background: radiusKm === km ? 'var(--medical-teal)' : '#ffffff',
+                color: radiusKm === km ? '#ffffff' : 'var(--text-main)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.25rem 0.55rem',
+                fontSize: '0.75rem',
+                fontWeight: radiusKm === km ? 800 : 600,
+                cursor: 'pointer'
+              }}
+            >
+              {km}km
+            </button>
+          ))}
+        </div>
+
       </div>
 
-      {/* MAP CONTAINER & FACILITY DETAILS */}
+      {/* MAP & HOSPITAL DETAILS */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1.3fr 0.7fr',
         gap: '1.25rem'
-      }}>
+      }} className="fac-map-grid">
         
         {/* LEAFLET MAP */}
         <div 
           ref={mapContainerRef}
           style={{
-            height: '400px',
+            height: '420px',
             width: '100%',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border-light)',
@@ -167,49 +248,60 @@ export const FacilityMap = () => {
           flexDirection: 'column',
           justifyContent: 'space-between'
         }}>
-          {selectedFacility ? (
+          {currentFacility ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <span className="badge badge-teal" style={{ fontSize: '0.7rem' }}>{selectedFacility.type}</span>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)' }}>
-                  {selectedFacility.distanceKm} km away
+                <span className="badge badge-teal" style={{ fontSize: '0.7rem' }}>
+                  {currentFacility.category === 'Government' ? '🏛️ Government' : '🏥 Private'} • {currentFacility.facilityType}
+                </span>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy)' }}>
+                  {currentFacility.distanceKm} km away
                 </span>
               </div>
 
-              <h4 style={{ fontSize: '1.1rem', color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
-                {selectedFacility.name}
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
+                {currentFacility.name}
               </h4>
 
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
-                {selectedFacility.address}
+                {currentFacility.address}
               </p>
 
               <div style={{ background: '#ffffff', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '0.85rem', fontSize: '0.8rem', border: '1px solid var(--border-light)' }}>
-                <div>Available Beds: <strong style={{ color: 'var(--success-green)' }}>{selectedFacility.availableBeds}</strong> / {selectedFacility.totalBeds}</div>
-                <div>Emergency: <strong>{selectedFacility.emergency24x7 ? '24x7 Emergency Ready' : 'OPD Only'}</strong></div>
-                <div>Phone: <strong>{selectedFacility.contact}</strong></div>
+                <div>Available Beds: <strong style={{ color: 'var(--success-green)' }}>{currentFacility.availableBeds}</strong> / {currentFacility.totalBeds}</div>
+                <div>ICU Beds Free: <strong>{currentFacility.icuBeds > 0 ? `${currentFacility.availableIcuBeds} / ${currentFacility.icuBeds}` : 'No ICU'}</strong></div>
+                <div>Emergency: <strong>{currentFacility.emergency24x7 ? '🚨 Open 24/7' : 'Daytime Hours'}</strong></div>
+                <div>Government Scheme: <strong>{currentFacility.ayushmanBharatAccepted ? '✓ Free / Ayushman Bharat' : 'Private Insurance'}</strong></div>
               </div>
 
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-subtle)', marginBottom: '0.25rem' }}>
-                  Available Specialties:
+                  Doctors on Duty:
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                  {selectedFacility.specialties.map((s, sidx) => (
-                    <span key={sidx} className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{s}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.75rem' }}>
+                  {currentFacility.doctorsOnDuty.slice(0, 2).map((d, didx) => (
+                    <div key={didx}>• <strong>{d.name}</strong> ({d.role})</div>
                   ))}
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', color: 'var(--text-subtle)' }}>Select a facility on the map.</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-subtle)' }}>Select a hospital on the map.</div>
           )}
 
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            <a href={`tel:${selectedFacility?.contact || '108'}`} className="btn btn-teal btn-sm" style={{ flex: 1, textDecoration: 'none' }}>
-              <Phone size={14} /> Call
+            <a href={`tel:${currentFacility?.contact || '108'}`} className="btn btn-teal btn-sm" style={{ flex: 1, textDecoration: 'none' }}>
+              <Phone size={14} /> Call ({currentFacility?.contact})
             </a>
-            <button onClick={() => alert(`Directions calculated to ${selectedFacility?.name}`)} className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
+            <button 
+              onClick={() => {
+                if (currentFacility) {
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentFacility.lat},${currentFacility.lng}`, '_blank');
+                }
+              }} 
+              className="btn btn-secondary btn-sm" 
+              style={{ flex: 1 }}
+            >
               <Navigation size={14} /> Directions
             </button>
           </div>
@@ -219,8 +311,8 @@ export const FacilityMap = () => {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*="gridTemplateColumns: 1.3fr 0.7fr"] {
-            gridTemplateColumns: 1fr !important;
+          .fac-map-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

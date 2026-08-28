@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { INITIAL_FACILITIES } from '../../services/facilityData.js';
-import { MapPin, Phone, Bed, Activity, ShieldCheck, Stethoscope } from 'lucide-react';
+import { INITIAL_FACILITIES, calculateDistance } from '../../services/facilityData.js';
+import { MapPin, Phone, Bed, Activity, ShieldCheck, Stethoscope, Building2 } from 'lucide-react';
 
 export const DoctorFacilityNetwork = () => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
-  const [selectedFacility, setSelectedFacility] = useState(INITIAL_FACILITIES[3]); // District Hospital by default
+  const [selectedFacility, setSelectedFacility] = useState(INITIAL_FACILITIES[0]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -15,7 +15,7 @@ export const DoctorFacilityNetwork = () => {
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
         center: [13.1332, 78.1388],
-        zoom: 11,
+        zoom: 10,
         scrollWheelZoom: false
       });
 
@@ -33,16 +33,14 @@ export const DoctorFacilityNetwork = () => {
     markersRef.current = [];
 
     INITIAL_FACILITIES.forEach(fac => {
-      let color = '#0d9488';
-      if (fac.type === 'District Hospital') color = '#0f4c81';
-      else if (fac.type === 'CHC') color = '#0284c7';
-      else if (fac.type === 'Tertiary Medical College') color = '#7c3aed';
+      const isGovt = fac.category === 'Government';
+      const color = isGovt ? '#0d9488' : '#0f4c81';
 
       const icon = L.divIcon({
         className: 'custom-pin',
         html: `
           <div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
-            <div style="transform: rotate(45deg); color: #fff; font-weight: 800; font-size: 13px;">+</div>
+            <div style="transform: rotate(45deg); color: #fff; font-size: 13px;">${isGovt ? '🏛️' : '🏥'}</div>
           </div>
         `,
         iconSize: [32, 32],
@@ -52,10 +50,10 @@ export const DoctorFacilityNetwork = () => {
 
       const marker = L.marker([fac.lat, fac.lng], { icon }).addTo(map);
       marker.bindPopup(`
-        <div style="padding: 8px; font-family: inherit;">
+        <div style="padding: 6px; font-family: inherit; font-size: 12px;">
           <strong>${fac.name}</strong>
-          <div style="font-size: 11px; color: #0d9488;">${fac.type}</div>
-          <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 3px;">Vacant Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
+          <div style="font-size: 11px; color: #0d9488;">${fac.category} • ${fac.facilityType}</div>
+          <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 2px;">Vacant Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
         </div>
       `);
 
@@ -69,47 +67,51 @@ export const DoctorFacilityNetwork = () => {
     <div className="med-card" style={{ padding: '1.75rem' }}>
       <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-          <span className="badge badge-teal">District Coordination Map</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Live Tele-Referral Directory</span>
+          <span className="badge badge-teal">60km Hospital Network</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Live Bed & Specialist Directory</span>
         </div>
         <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <MapPin size={20} color="var(--medical-teal)" />
-          <span>District Health Referral Capacity & Resource Network</span>
+          <span>District Hospital Referral & Available Bed Capacity</span>
         </h3>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr', gap: '1.25rem' }} className="doc-net-grid">
         <div 
           ref={mapContainerRef}
-          style={{ height: '400px', width: '100%', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-light)', overflow: 'hidden' }}
+          style={{ height: '420px', width: '100%', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-light)', overflow: 'hidden' }}
         />
 
         <div style={{ background: 'var(--bg-page)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-light)', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {selectedFacility ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <span className="badge badge-teal" style={{ fontSize: '0.7rem' }}>{selectedFacility.type}</span>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)' }}>{selectedFacility.distanceKm} km</span>
+                <span className="badge badge-teal" style={{ fontSize: '0.7rem' }}>
+                  {selectedFacility.category === 'Government' ? '🏛️ Government' : '🏥 Private'} • {selectedFacility.facilityType}
+                </span>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)' }}>
+                  {selectedFacility.emergency24x7 ? '🚨 24x7 Ready' : 'OPD Only'}
+                </span>
               </div>
 
-              <h4 style={{ fontSize: '1.1rem', color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
                 {selectedFacility.name}
               </h4>
 
               <div style={{ background: '#ffffff', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '0.85rem', fontSize: '0.8rem', border: '1px solid var(--border-light)' }}>
-                <div>Total Inpatient Beds: <strong>{selectedFacility.totalBeds}</strong></div>
-                <div>Currently Vacant: <strong style={{ color: 'var(--success-green)' }}>{selectedFacility.availableBeds} beds</strong></div>
-                <div>ICU / Critical Care: <strong>{selectedFacility.icuAvailable ? 'Available (Level-2)' : 'No ICU'}</strong></div>
-                <div>Emergency Trauma: <strong>{selectedFacility.emergency24x7 ? '24x7 On Standby' : 'OPD Only'}</strong></div>
+                <div>Total Beds: <strong>{selectedFacility.totalBeds}</strong></div>
+                <div>Currently Free: <strong style={{ color: 'var(--success-green)' }}>{selectedFacility.availableBeds} beds</strong></div>
+                <div>ICU Beds: <strong>{selectedFacility.icuBeds > 0 ? `${selectedFacility.availableIcuBeds} / ${selectedFacility.icuBeds} free` : 'No ICU'}</strong></div>
+                <div>Oxygen Beds: <strong>{selectedFacility.oxygenBeds || 10} available</strong></div>
               </div>
 
               <div style={{ marginBottom: '0.75rem' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.35rem' }}>
-                  Specialists Available for Tele-Handover:
+                  Doctors Available for Direct Case Handover:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                   {selectedFacility.doctorsOnDuty?.map((doc, didx) => (
-                    <div key={didx}>• <strong>{doc.name}</strong> ({doc.role})</div>
+                    <div key={didx}>• <strong>{doc.name}</strong> — {doc.role}</div>
                   ))}
                 </div>
               </div>
@@ -118,7 +120,7 @@ export const DoctorFacilityNetwork = () => {
 
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
             <a href={`tel:${selectedFacility?.contact || '108'}`} className="btn btn-primary btn-sm" style={{ flex: 1, textDecoration: 'none' }}>
-              <Phone size={14} /> Tele-Handover ({selectedFacility?.contact})
+              <Phone size={14} /> Call Hospital ({selectedFacility?.contact})
             </a>
           </div>
         </div>
@@ -126,8 +128,8 @@ export const DoctorFacilityNetwork = () => {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*="gridTemplateColumns: 1.3fr 0.7fr"] {
-            gridTemplateColumns: 1fr !important;
+          .doc-net-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

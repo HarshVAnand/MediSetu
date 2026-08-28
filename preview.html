@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MediSetu — Easy Healthcare & 60km Nearby Hospital Finder</title>
+  <meta name="description" content="Keep your lifetime medical records safe and organized in one place, find all government and private hospitals within a 60km radius, and connect with doctors easily — even without internet." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- GSAP & Lenis CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- React 18 & ReactDOM from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <link rel="stylesheet" href="src/index.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Main Application Script via Babel for instant browser execution -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // --- 1. DATA & HELPER SERVICES ---
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0;
+      const R = 6371; // Earth radius in km
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return parseFloat((R * c).toFixed(1));
+    }
+
+    const PRESET_REGIONS = [
+      { id: 'kolar-central', name: 'Kolar City (Centre)', lat: 13.1367, lng: 78.1340 },
+      { id: 'bangarapet', name: 'Bangarapet Town', lat: 12.9774, lng: 78.1966 },
+      { id: 'hoskote', name: 'Hoskote / East Bengaluru', lat: 13.0700, lng: 77.7981 },
+      { id: 'malur', name: 'Malur Town', lat: 13.0039, lng: 77.9405 },
+      { id: 'mulbagal', name: 'Mulbagal Rural', lat: 13.1648, lng: 78.3942 },
+      { id: 'chintamani', name: 'Chintamani Taluk', lat: 13.4000, lng: 78.0667 },
+      { id: 'srinivaspur', name: 'Srinivaspur Town', lat: 13.3385, lng: 78.2144 }
+    ];
+
+    const INITIAL_FACILITIES = [
+      // GOVERNMENT HOSPITALS
+      {
+        id: 'fac-gov-dh-01',
+        name: 'SNR Government District Hospital & Trauma Centre',
+        category: 'Government',
+        facilityType: 'District Hospital',
+        lat: 13.1332,
+        lng: 78.1388,
+        address: 'Hospital Road, Gulpet, Kolar 563101',
+        contact: '+91 8152 222340',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 250,
+        availableBeds: 48,
+        icuBeds: 18,
+        availableIcuBeds: 6,
+        oxygenBeds: 60,
+        doctorsOnDuty: [
+          { name: 'Dr. Preethi Hegde, MD', role: 'Heart Specialist (Cardiologist)' },
+          { name: 'Dr. Vikramaditya, MS', role: 'Bone & Joint Specialist (Orthopaedic)' },
+          { name: 'Dr. Sunita Murthy, MD', role: 'Chest & Breathing Specialist' }
+        ]
+      },
+      {
+        id: 'fac-gov-phc-01',
+        name: 'Kolar Sub-Divisional Government Health Centre',
+        category: 'Government',
+        facilityType: 'Primary Health Centre',
+        lat: 13.1367,
+        lng: 78.1291,
+        address: 'Main Road, Kolar Rural 563101',
+        contact: '+91 8152 222104',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 16,
+        availableBeds: 7,
+        icuBeds: 0,
+        availableIcuBeds: 0,
+        oxygenBeds: 4,
+        doctorsOnDuty: [
+          { name: 'Dr. Ramesh Kumar, MBBS', role: 'General Family Doctor' },
+          { name: 'Dr. Ananya Rao, MBBS', role: 'Women & Child Health Doctor' }
+        ]
+      },
+      {
+        id: 'fac-gov-chc-01',
+        name: 'Bangarapet Community Government Hospital',
+        category: 'Government',
+        facilityType: 'Community Health Centre',
+        lat: 12.9774,
+        lng: 78.1966,
+        address: 'Station Road, Bangarapet 563114',
+        contact: '+91 8153 255220',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 40,
+        availableBeds: 14,
+        icuBeds: 4,
+        availableIcuBeds: 2,
+        oxygenBeds: 12,
+        doctorsOnDuty: [
+          { name: 'Dr. Suresh Babu, MD', role: 'Senior Family Physician' },
+          { name: 'Dr. Deepa S., MS', role: 'Women\'s Health & Delivery Specialist' }
+        ]
+      },
+      {
+        id: 'fac-gov-malur-01',
+        name: 'Malur Taluk Government General Hospital',
+        category: 'Government',
+        facilityType: 'Taluk Hospital',
+        lat: 13.0039,
+        lng: 77.9405,
+        address: 'Main Road, Malur Town 563130',
+        contact: '+91 8151 232115',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 60,
+        availableBeds: 21,
+        icuBeds: 6,
+        availableIcuBeds: 3,
+        oxygenBeds: 16,
+        doctorsOnDuty: [
+          { name: 'Dr. Manjunath Reddy, MS', role: 'General Surgeon' },
+          { name: 'Dr. Shobha K., MD', role: 'Women\'s Health Doctor' }
+        ]
+      },
+      {
+        id: 'fac-gov-mulbagal-01',
+        name: 'Mulbagal Government Rural Hospital',
+        category: 'Government',
+        facilityType: 'Rural Hospital',
+        lat: 13.1648,
+        lng: 78.3942,
+        address: 'NH 75 Bypass, Mulbagal 563131',
+        contact: '+91 8159 242011',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 30,
+        availableBeds: 9,
+        icuBeds: 2,
+        availableIcuBeds: 1,
+        oxygenBeds: 8,
+        doctorsOnDuty: [
+          { name: 'Dr. Farooq Ahmed, MBBS', role: 'General Doctor' }
+        ]
+      },
+      {
+        id: 'fac-gov-sub-01',
+        name: 'Vokkaleri Village Health Post (Ayushman Arogya Mandir)',
+        category: 'Government',
+        facilityType: 'Village Clinic',
+        lat: 13.0850,
+        lng: 78.1620,
+        address: 'Near Gram Panchayat, Vokkaleri Village 563130',
+        contact: '+91 8152 245012',
+        emergency24x7: false,
+        ayushmanBharatAccepted: true,
+        totalBeds: 4,
+        availableBeds: 3,
+        icuBeds: 0,
+        availableIcuBeds: 0,
+        oxygenBeds: 1,
+        doctorsOnDuty: [
+          { name: 'Smt. Lakshmi Devi', role: 'Community Health Officer' },
+          { name: 'Smt. Kavitha M.', role: 'Village Health Nurse' }
+        ]
+      },
+      {
+        id: 'fac-gov-chintamani-01',
+        name: 'Chintamani Government Taluk Hospital',
+        category: 'Government',
+        facilityType: 'Taluk Hospital',
+        lat: 13.4000,
+        lng: 78.0667,
+        address: 'Court Road, Chintamani 563125',
+        contact: '+91 8154 252100',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 80,
+        availableBeds: 28,
+        icuBeds: 8,
+        availableIcuBeds: 4,
+        oxygenBeds: 20,
+        doctorsOnDuty: [
+          { name: 'Dr. Narayanaswamy, MD', role: 'General Medicine Doctor' }
+        ]
+      },
+      {
+        id: 'fac-gov-srinivas-01',
+        name: 'Srinivaspur Government General Hospital',
+        category: 'Government',
+        facilityType: 'Taluk Hospital',
+        lat: 13.3385,
+        lng: 78.2144,
+        address: 'Kolar Road, Srinivaspur 563135',
+        contact: '+91 8157 245230',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 50,
+        availableBeds: 16,
+        icuBeds: 4,
+        availableIcuBeds: 2,
+        oxygenBeds: 12,
+        doctorsOnDuty: [
+          { name: 'Dr. Venkatachalapathy, MBBS', role: 'Chief Medical Officer' }
+        ]
+      },
+
+      // PRIVATE HOSPITALS
+      {
+        id: 'fac-pvt-urs-01',
+        name: 'Sri Devaraj Urs Super Speciality Hospital & Medical College',
+        category: 'Private',
+        facilityType: 'Super-Specialty Hospital',
+        lat: 13.1554,
+        lng: 78.1755,
+        address: 'Tamaka, Kolar-Bangalore Highway 563103',
+        contact: '+91 8152 243003',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 750,
+        availableBeds: 142,
+        icuBeds: 60,
+        availableIcuBeds: 18,
+        oxygenBeds: 120,
+        doctorsOnDuty: [
+          { name: 'Prof. Dr. Rajeshwar Swamy, MD', role: 'Brain & Nerve Specialist' },
+          { name: 'Dr. Meera Chandrasekhar, MD', role: 'Diabetes & Hormone Specialist' },
+          { name: 'Dr. Arvind Sastry, MCh', role: 'Heart Surgeon' }
+        ]
+      },
+      {
+        id: 'fac-pvt-manipal-01',
+        name: 'Manipal Outreach Clinic & Multi-Specialty Hospital',
+        category: 'Private',
+        facilityType: 'Multi-Specialty Hospital',
+        lat: 13.0720,
+        lng: 77.7995,
+        address: 'Old Madras Road, Hoskote 562114',
+        contact: '+91 80 2845 6789',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 120,
+        availableBeds: 34,
+        icuBeds: 20,
+        availableIcuBeds: 7,
+        oxygenBeds: 40,
+        doctorsOnDuty: [
+          { name: 'Dr. Sandeep Nair, MD', role: 'Heart & Blood Pressure Specialist' },
+          { name: 'Dr. Priya Varma, MS', role: 'General Surgeon' }
+        ]
+      },
+      {
+        id: 'fac-pvt-apollo-01',
+        name: 'Apollo Clinic & Emergency Medical Centre',
+        category: 'Private',
+        facilityType: 'Specialty Clinic',
+        lat: 13.1420,
+        lng: 78.1310,
+        address: 'Bangalore Road, Near Clock Tower, Kolar 563101',
+        contact: '+91 8152 228900',
+        emergency24x7: true,
+        ayushmanBharatAccepted: false,
+        totalBeds: 25,
+        availableBeds: 8,
+        icuBeds: 4,
+        availableIcuBeds: 2,
+        oxygenBeds: 8,
+        doctorsOnDuty: [
+          { name: 'Dr. Karthik Rao, MD', role: 'Family Health & Diabetes Specialist' }
+        ]
+      },
+      {
+        id: 'fac-pvt-narayana-01',
+        name: 'Narayana Health Community Heart & Kidney Care',
+        category: 'Private',
+        facilityType: 'Super-Specialty Hospital',
+        lat: 13.0650,
+        lng: 77.8100,
+        address: 'Near Toll Plaza, NH 75, Hoskote 562114',
+        contact: '+91 80 7122 2222',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 180,
+        availableBeds: 52,
+        icuBeds: 35,
+        availableIcuBeds: 11,
+        oxygenBeds: 50,
+        doctorsOnDuty: [
+          { name: 'Dr. Vivek Murthy, MS', role: 'Senior Heart Specialist' },
+          { name: 'Dr. Ananya Sen, MD', role: 'Kidney Specialist' }
+        ]
+      },
+      {
+        id: 'fac-pvt-sai-01',
+        name: 'Sri Sathya Sai General Hospital (Free & Charitable)',
+        category: 'Private',
+        facilityType: 'Charitable Multi-Specialty',
+        lat: 12.9860,
+        lng: 77.7580,
+        address: 'Whitefield Road, East Bangalore Rural Border 560066',
+        contact: '+91 80 2841 1500',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 320,
+        availableBeds: 68,
+        icuBeds: 24,
+        availableIcuBeds: 8,
+        oxygenBeds: 70,
+        doctorsOnDuty: [
+          { name: 'Dr. Govind Swaminathan, MS', role: 'Orthopaedic Surgeon' },
+          { name: 'Dr. Jayashree Ram, MD', role: 'Maternity Specialist' }
+        ]
+      },
+      {
+        id: 'fac-pvt-santhiram-01',
+        name: 'Santhiram Private Hospital & Maternity Home',
+        category: 'Private',
+        facilityType: 'Maternity & General Hospital',
+        lat: 12.9810,
+        lng: 78.1920,
+        address: 'Vivekananda Nagar, Bangarapet 563114',
+        contact: '+91 8153 256880',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 35,
+        availableBeds: 12,
+        icuBeds: 4,
+        availableIcuBeds: 2,
+        oxygenBeds: 10,
+        doctorsOnDuty: [
+          { name: 'Dr. Santhosh Kumar, MD', role: 'Family Doctor' }
+        ]
+      },
+      {
+        id: 'fac-pvt-lifecare-01',
+        name: 'Lifecare Multi-Specialty Hospital & Dialysis Center',
+        category: 'Private',
+        facilityType: 'Multi-Specialty Hospital',
+        lat: 13.0080,
+        lng: 77.9350,
+        address: 'Near Bus Stand, Malur 563130',
+        contact: '+91 8151 234500',
+        emergency24x7: true,
+        ayushmanBharatAccepted: true,
+        totalBeds: 45,
+        availableBeds: 15,
+        icuBeds: 6,
+        availableIcuBeds: 3,
+        oxygenBeds: 14,
+        doctorsOnDuty: [
+          { name: 'Dr. Kiran Gowda, MD', role: 'Critical Care Doctor' }
+        ]
+      }
+    ];
+
+    function getHospitalsInRadius(userLat, userLng, radiusKm, filters = {}) {
+      const { category = 'ALL', emergencyOnly = false, icuOnly = false, searchQuery = '' } = filters;
+      return INITIAL_FACILITIES.map(fac => {
+        const dist = calculateDistance(userLat, userLng, fac.lat, fac.lng);
+        return { ...fac, distanceKm: dist };
+      })
+      .filter(fac => {
+        if (radiusKm && fac.distanceKm > radiusKm) return false;
+        if (category !== 'ALL' && fac.category !== category) return false;
+        if (emergencyOnly && !fac.emergency24x7) return false;
+        if (icuOnly && (!fac.icuBeds || fac.availableIcuBeds <= 0)) return false;
+        if (searchQuery && searchQuery.trim() !== '') {
+          const q = searchQuery.toLowerCase().trim();
+          const matches = fac.name.toLowerCase().includes(q) ||
+                          fac.address.toLowerCase().includes(q) ||
+                          fac.facilityType.toLowerCase().includes(q) ||
+                          fac.doctorsOnDuty.some(d => d.name.toLowerCase().includes(q) || d.role.toLowerCase().includes(q));
+          if (!matches) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+
+    // Sample Sample Seed Patient
+    const SAMPLE_PATIENT = {
+      id: 'pat-001',
+      name: 'Ramesh Gowda',
+      age: 48,
+      gender: 'Male',
+      bloodGroup: 'O+',
+      abhaId: '91-4428-9912-7741',
+      phone: '+91 98451 23456',
+      village: 'Vokkaleri Village, Kolar',
+      primaryCareUnit: 'Vokkaleri Ayushman Arogya Mandir',
+      assignedAsha: 'Smt. Kavitha M. (+91 98452 88901)',
+      chronicConditions: ['Type-2 Diabetes', 'High Blood Pressure (Hypertension)'],
+      allergies: ['Penicillin (Throat swelling)']
+    };
+
+    // --- 2. MAIN REACT APPLICATION ---
+    function App() {
+      const [currentRole, setCurrentRole] = useState('guest'); // 'guest' | 'patient' | 'doctor'
+      const [currentUser, setCurrentUser] = useState(null);
+      const [activeSection, setActiveSection] = useState('hero');
+      const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+      // Hospital Finder State
+      const [userLocation, setUserLocation] = useState({
+        name: 'Kolar City (Centre)',
+        lat: 13.1367,
+        lng: 78.1340,
+        isLiveGps: false
+      });
+      const [radiusKm, setRadiusKm] = useState(60); // 60km Default
+      const [categoryFilter, setCategoryFilter] = useState('ALL');
+      const [emergencyOnly, setEmergencyOnly] = useState(false);
+      const [icuOnly, setIcuOnly] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedHospitalId, setSelectedHospitalId] = useState('fac-gov-dh-01');
+      const [mobileTab, setMobileTab] = useState('split');
+      const [isLocating, setIsLocating] = useState(false);
+
+      // Active Patient Dashboard Tab
+      const [patientTab, setPatientTab] = useState('timeline');
+      const [doctorTab, setDoctorTab] = useState('dossier');
+
+      // Modals
+      const [authModal, setAuthModal] = useState(null); // 'patient-login' | 'patient-register' | 'doctor-login' | 'doctor-register'
+      const [qrModalOpen, setQrModalOpen] = useState(false);
+      const [aiQuery, setAiQuery] = useState('');
+      const [aiAnswer, setAiAnswer] = useState(null);
+      const [aiLang, setAiLang] = useState('en');
+
+      // Lenis Smooth Scroll Init
+      useEffect(() => {
+        try {
+          if (window.Lenis) {
+            const lenis = new Lenis({
+              duration: 1.2,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+              smoothWheel: true
+            });
+            function raf(time) {
+              lenis.raf(time);
+              requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+          }
+        } catch (e) {
+          console.log('Lenis init:', e);
+        }
+      }, []);
+
+      // GSAP Animations
+      useEffect(() => {
+        if (window.gsap) {
+          gsap.from('.hero-anim-item', {
+            y: 35,
+            opacity: 0,
+            duration: 0.85,
+            stagger: 0.12,
+            ease: 'power3.out'
+          });
+
+          gsap.to('.floating-badge-1', {
+            y: -10,
+            duration: 2.2,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut'
+          });
+
+          gsap.to('.floating-badge-2', {
+            y: 10,
+            duration: 2.6,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: 0.5
+          });
+        }
+      }, [currentRole]);
+
+      // Computed Hospitals
+      const hospitals = useMemo(() => {
+        return getHospitalsInRadius(userLocation.lat, userLocation.lng, radiusKm, {
+          category: categoryFilter,
+          emergencyOnly,
+          icuOnly,
+          searchQuery
+        });
+      }, [userLocation, radiusKm, categoryFilter, emergencyOnly, icuOnly, searchQuery]);
+
+      // Leaflet Map Reference
+      const mapContainerRef = useRef(null);
+      const mapInstanceRef = useRef(null);
+      const markersLayerRef = useRef(null);
+      const radiusCircleRef = useRef(null);
+      const userMarkerRef = useRef(null);
+
+      // Initialize / Update Leaflet Map
+      useEffect(() => {
+        if (!mapContainerRef.current || currentRole !== 'guest') return;
+
+        if (!mapInstanceRef.current) {
+          const map = L.map(mapContainerRef.current, {
+            center: [userLocation.lat, userLocation.lng],
+            zoom: 10,
+            scrollWheelZoom: false
+          });
+
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
+          }).addTo(map);
+
+          markersLayerRef.current = L.layerGroup().addTo(map);
+          mapInstanceRef.current = map;
+        }
+
+        const map = mapInstanceRef.current;
+        map.setView([userLocation.lat, userLocation.lng], radiusKm <= 25 ? 12 : radiusKm <= 60 ? 10 : 9);
+
+        // Clear previous user pin and radius circle
+        if (userMarkerRef.current) map.removeLayer(userMarkerRef.current);
+        if (radiusCircleRef.current) map.removeLayer(radiusCircleRef.current);
+
+        userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+          icon: L.divIcon({
+            className: 'user-pin',
+            html: `<div style="position:relative;width:20px;height:20px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;width:20px;height:20px;background:rgba(2,132,199,0.4);border-radius:50%;animation:ping 1.5s infinite;"></div>
+              <div style="width:12px;height:12px;background:#0284c7;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>
+            </div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        }).addTo(map);
+
+        radiusCircleRef.current = L.circle([userLocation.lat, userLocation.lng], {
+          radius: radiusKm * 1000,
+          color: '#0d9488',
+          fillColor: '#14b8a6',
+          fillOpacity: 0.08,
+          weight: 2,
+          dashArray: '5, 8'
+        }).addTo(map);
+
+        // Render hospital markers
+        markersLayerRef.current.clearLayers();
+        hospitals.forEach(fac => {
+          const isGovt = fac.category === 'Government';
+          const isSelected = fac.id === selectedHospitalId;
+          const color = isGovt ? '#0d9488' : '#0f4c81';
+
+          const icon = L.divIcon({
+            className: 'custom-pin',
+            html: `
+              <div style="
+                background-color: ${color};
+                width: ${isSelected ? '38px' : '32px'};
+                height: ${isSelected ? '38px' : '32px'};
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: ${isSelected ? '0 0 0 4px #facc15, 0 8px 16px rgba(0,0,0,0.35)' : '0 3px 8px rgba(0,0,0,0.25)'};
+                border: 2px solid #ffffff;
+                cursor: pointer;
+              ">
+                <div style="transform: rotate(45deg); color: #fff; font-size: ${isSelected ? '14px' : '12px'};">
+                  ${isGovt ? '🏛️' : '🏥'}
+                </div>
+              </div>
+            `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+          });
+
+          const marker = L.marker([fac.lat, fac.lng], { icon }).addTo(markersLayerRef.current);
+          marker.bindPopup(`
+            <div style="padding:6px;font-family:inherit;font-size:12px;max-width:240px;">
+              <div style="display:flex;justify-content:space-between;gap:4px;margin-bottom:3px;">
+                <span style="font-weight:700;color:${isGovt ? '#0f766e' : '#0369a1'};">${isGovt ? '🏛️ Govt' : '🏥 Private'}</span>
+                <span style="font-weight:800;color:#0d9488;">${fac.distanceKm} km away</span>
+              </div>
+              <strong style="color:#0f172a;font-size:13px;display:block;margin-bottom:3px;">${fac.name}</strong>
+              <div style="color:#64748b;font-size:11px;margin-bottom:5px;">${fac.address}</div>
+              <div style="background:#f8fafc;padding:5px;border-radius:4px;border:1px solid #e2e8f0;margin-bottom:5px;">
+                <div>Available Beds: <strong style="color:#16a34a;">${fac.availableBeds} / ${fac.totalBeds}</strong></div>
+                ${fac.icuBeds > 0 ? `<div>ICU Beds: <strong style="color:#0284c7;">${fac.availableIcuBeds} / ${fac.icuBeds} free</strong></div>` : ''}
+              </div>
+              <a href="tel:${fac.contact}" style="display:block;text-align:center;background:#0d9488;color:#fff;padding:5px;border-radius:4px;text-decoration:none;font-weight:700;font-size:11px;">
+                📞 Call (${fac.contact})
+              </a>
+            </div>
+          `);
+
+          marker.on('click', () => {
+            setSelectedHospitalId(fac.id);
+          });
+        });
+      }, [userLocation, radiusKm, categoryFilter, emergencyOnly, icuOnly, searchQuery, selectedHospitalId, currentRole]);
+
+      // GPS Live Geolocation
+      const handleDetectGPS = () => {
+        if (!navigator.geolocation) {
+          alert('GPS location is not supported on this browser.');
+          return;
+        }
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setUserLocation({
+              name: 'My Live GPS Location',
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              isLiveGps: true
+            });
+            setIsLocating(false);
+          },
+          (err) => {
+            alert('Could not fetch exact GPS. Using Kolar City preset.');
+            setIsLocating(false);
+          }
+        );
+      };
+
+      // Navigate helper
+      const handleNavigate = (sectionId) => {
+        setActiveSection(sectionId);
+        setMobileMenuOpen(false);
+        if (sectionId === 'landing') {
+          setCurrentRole('guest');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      // AI Patient Assistant Q&A
+      const handleAskAI = () => {
+        if (!aiQuery.trim()) return;
+        const q = aiQuery.toLowerCase();
+        let ans = '';
+        if (q.includes('fever') || q.includes('paracetamol') || q.includes('pain')) {
+          ans = aiLang === 'hi' 
+            ? 'हाँ, बुखार के लिए पैरासिटामोल 500mg सुरक्षित है। आपको पेनिसिलिन से एलर्जी है, इसलिए कोई भी अनजान दवा न लें। गोली हमेशा भोजन के बाद लें।'
+            : aiLang === 'kn'
+            ? 'ಹೌದು, ಜ್ವರಕ್ಕೆ ಪ್ಯಾರಸಿಟಮಾಲ್ 500mg ಸುರಕ್ಷಿತವಾಗಿದೆ. ನಿಮಗೆ ಪೆನ್ಸಿಲಿನ್ ಅಲರ್ಜಿ ಇದೆ, ಅಪರಿಚಿತ ಮಾತ್ರೆಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಬೇಡಿ.'
+            : 'Yes, Paracetamol (500mg) is safe for fever. Because you have a recorded Penicillin allergy, do NOT take unverified antibiotic pills. Always take after meals.';
+        } else if (q.includes('sugar') || q.includes('diabetes') || q.includes('metformin')) {
+          ans = aiLang === 'hi'
+            ? 'आपकी पिछली जांच में शुगर (HbA1c) 7.6% थी। मेटफॉर्मिन 500mg सुबह-शाम खाने के बाद लें, मीठा कम करें और 30 मिनट टहलें।'
+            : aiLang === 'kn'
+            ? 'ನಿಮ್ಮ ರಕ್ತದ ಸಕ್ಕರೆ 7.6% ಇದೆ. ಮೆಟ್‌ಫಾರ್ಮಿನ್ 500mg ಮಾತ್ರೆಯನ್ನು ಊಟದ ನಂತರ ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಪ್ರತಿದಿನ ವ್ಯಾಯಾಮ ಮಾಡಿ.'
+            : 'Your latest HbA1c test was 7.6%. Take Metformin 500mg twice daily after meals, reduce sweets, and walk 30 minutes daily.';
+        } else {
+          ans = aiLang === 'hi'
+            ? 'नमस्ते रमेश! आपकी 2 नियमित दवाइयां चल रही हैं और आपको पेनिसिलिन से एलर्जी है। आप अपनी खुराक या नजदीकी अस्पताल के बारे में पूछ सकते हैं।'
+            : aiLang === 'kn'
+            ? 'ನಮಸ್ಕಾರ ರಮೇಶ್! ನಿಮ್ಮ 2 ಔಷಧಿಗಳು ಚಾಲ್ತಿಯಲ್ಲಿವೆ. ನಿಮ್ಮ ಮಾತ್ರೆಗಳ ಬಗ್ಗೆ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ.'
+            : 'Hello Ramesh! You have 2 active prescriptions and a documented Penicillin allergy. You can ask about your daily tablet timings or nearby 60km hospitals.';
+        }
+        setAiAnswer(ans);
+      };
+
+      return (
+        <div className="page-wrapper">
+          
+          {/* 1. TOP BANNER */}
+          <div style={{
+            backgroundColor: 'var(--bg-subtle)',
+            borderBottom: '1px solid var(--border-light)',
+            padding: '0.45rem 1rem',
+            fontSize: '0.8125rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', fontWeight: 600 }}>
+              <span>🟢</span>
+              <span>Works 100% Offline & Online • All records save directly to your device</span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Emergency Ambulance: <strong style={{ color: '#dc2626' }}>📞 108</strong> | Health Helpline: <strong style={{ color: '#0d9488' }}>📞 104</strong>
+            </div>
+          </div>
+
+          {/* 2. NAVBAR */}
+          <header style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 900,
+            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid var(--border-light)',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px' }}>
+              
+              {/* BRAND LOGO */}
+              <div 
+                onClick={() => handleNavigate('landing')}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer' }}
+              >
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #0f4c81 0%, #0d9488 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontSize: '20px'
+                }}>
+                  🩺
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                    <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--primary-navy-dark)', letterSpacing: '-0.02em' }}>
+                      MediSetu
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--medical-teal)', background: 'var(--medical-teal-subtle)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #99f6e4' }}>
+                      HEALTH
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 500, lineHeight: 1 }}>
+                    Easy Healthcare & 60km Nearby Hospital Finder
+                  </div>
+                </div>
+              </div>
+
+              {/* DESKTOP LINKS */}
+              {currentRole === 'guest' && (
+                <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <button onClick={() => handleNavigate('hero')} style={{ background: 'none', border: 'none', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>Home</button>
+                  <button onClick={() => handleNavigate('facilities')} style={{ background: 'none', border: 'none', fontWeight: 700, color: 'var(--medical-teal)', cursor: 'pointer' }}>📍 Find Hospitals (60km)</button>
+                  <button onClick={() => handleNavigate('how-it-works')} style={{ background: 'none', border: 'none', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>How It Works</button>
+                  <button onClick={() => handleNavigate('for-patients')} style={{ background: 'none', border: 'none', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>For Patients</button>
+                  <button onClick={() => handleNavigate('services')} style={{ background: 'none', border: 'none', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>Services</button>
+                  <button onClick={() => handleNavigate('about')} style={{ background: 'none', border: 'none', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>About</button>
+                </nav>
+              )}
+
+              {/* AUTH BUTTONS */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                {currentRole === 'guest' ? (
+                  <div className="auth-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button 
+                      onClick={() => { setCurrentUser(SAMPLE_PATIENT); setCurrentRole('patient'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      👤 Patient Login
+                    </button>
+                    <button 
+                      onClick={() => { setCurrentUser({ name: 'Dr. Ramesh Kumar', qualifications: 'MBBS, DCH', specialization: 'General Family Doctor', uid: 'KMC-77419', currentPlaceOfPractice: 'Kolar Health Centre' }); setCurrentRole('doctor'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="btn btn-outline-teal btn-sm"
+                    >
+                      🩺 Doctor Login
+                    </button>
+                    <button 
+                      onClick={() => { setCurrentUser(SAMPLE_PATIENT); setCurrentRole('patient'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="btn btn-primary btn-sm"
+                    >
+                      Get Started
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <div style={{ background: 'var(--medical-teal-subtle)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid #99f6e4', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--medical-teal-dark)' }}>
+                      {currentRole === 'patient' ? '👤 ' + currentUser.name : '🩺 ' + currentUser.name}
+                    </div>
+                    <button 
+                      onClick={() => { setCurrentRole('guest'); setCurrentUser(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ color: '#dc2626' }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+
+                {/* Mobile Menu Button */}
+                <button 
+                  className="mobile-menu-btn"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  style={{ display: 'none', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', padding: '0.25rem' }}
+                >
+                  {mobileMenuOpen ? '✕' : '☰'}
+                </button>
+              </div>
+
+            </div>
+
+            {/* MOBILE DRAWER */}
+            {mobileMenuOpen && (
+              <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-medium)', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button onClick={() => handleNavigate('hero')} style={{ background: 'none', border: 'none', textAlign: 'left', fontWeight: 600, fontSize: '0.95rem' }}>Home</button>
+                <button onClick={() => handleNavigate('facilities')} style={{ background: 'none', border: 'none', textAlign: 'left', fontWeight: 700, fontSize: '0.95rem', color: 'var(--medical-teal)' }}>📍 Find Hospitals (60km Radius)</button>
+                <button onClick={() => handleNavigate('how-it-works')} style={{ background: 'none', border: 'none', textAlign: 'left', fontWeight: 600, fontSize: '0.95rem' }}>How It Works</button>
+                <button onClick={() => handleNavigate('for-patients')} style={{ background: 'none', border: 'none', textAlign: 'left', fontWeight: 600, fontSize: '0.95rem' }}>For Patients</button>
+                <button onClick={() => handleNavigate('services')} style={{ background: 'none', border: 'none', textAlign: 'left', fontWeight: 600, fontSize: '0.95rem' }}>Services</button>
+                <hr style={{ borderColor: 'var(--border-light)' }} />
+                <button onClick={() => { setCurrentUser(SAMPLE_PATIENT); setCurrentRole('patient'); setMobileMenuOpen(false); }} className="btn btn-primary" style={{ width: '100%' }}>👤 Patient Login</button>
+                <button onClick={() => { setCurrentUser({ name: 'Dr. Ramesh Kumar', qualifications: 'MBBS', uid: 'KMC-77419', currentPlaceOfPractice: 'Kolar Centre' }); setCurrentRole('doctor'); setMobileMenuOpen(false); }} className="btn btn-outline-teal" style={{ width: '100%' }}>🩺 Doctor Login</button>
+              </div>
+            )}
+          </header>
+
+          {/* 3. MAIN BODY */}
+          <main style={{ flex: 1 }}>
+
+            {/* VIEW 1: LANDING PAGE */}
+            {currentRole === 'guest' && (
+              <div>
+                
+                {/* HERO SECTION */}
+                <section id="hero" style={{
+                  background: 'linear-gradient(180deg, #ffffff 0%, #f0fdfa 45%, #f8fafc 100%)',
+                  padding: '3.5rem 0 4.5rem 0',
+                  borderBottom: '1px solid var(--border-light)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div className="app-container">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '3rem', alignItems: 'center' }} className="hero-main-grid">
+                      
+                      {/* Left Headline & Value Proposition */}
+                      <div>
+                        <div className="hero-anim-item" style={{ marginBottom: '1.25rem' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--medical-teal-subtle)', border: '1px solid #99f6e4', padding: '0.35rem 0.95rem', borderRadius: 'var(--radius-full)', fontSize: '0.8125rem', color: 'var(--medical-teal-dark)', fontWeight: 700 }}>
+                            <span>✨</span>
+                            <span>Simple Health Records & 60km Nearby Hospital Finder</span>
+                          </div>
+                        </div>
+
+                        <h1 className="hero-anim-item" style={{ fontSize: 'clamp(2.1rem, 4vw, 3.25rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', lineHeight: 1.15, marginBottom: '1.25rem' }}>
+                          All your medical records in one place, <br />
+                          <span style={{ color: 'var(--medical-teal)', background: 'linear-gradient(90deg, #0d9488, #0284c7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            from your village clinic to city doctors.
+                          </span>
+                        </h1>
+
+                        <p className="hero-anim-item" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: '1.65', marginBottom: '2rem', maxWidth: '560px' }}>
+                          MediSetu keeps all your handwritten doctor slips, blood tests, and medicine schedules safe and organized. Find free government and private hospitals within 60km, share your history with doctors in 2 seconds, and get caring follow-up at your doorstep — <strong>even without internet.</strong>
+                        </p>
+
+                        <div className="hero-anim-item" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+                          <button 
+                            onClick={() => { setCurrentUser(SAMPLE_PATIENT); setCurrentRole('patient'); }}
+                            className="btn btn-primary btn-lg"
+                          >
+                            <span>Create Free Patient Account</span>
+                            <span>→</span>
+                          </button>
+                          <button 
+                            onClick={() => handleNavigate('facilities')}
+                            className="btn btn-outline-teal btn-lg"
+                          >
+                            <span>📍 Find Hospitals (60km Radius)</span>
+                          </button>
+                        </div>
+
+                        <div className="hero-anim-item" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-light)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <span style={{ fontSize: '20px' }}>📶</span>
+                            <div>
+                              <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Works Offline</div>
+                              <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>No cell signal needed</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <span style={{ fontSize: '20px' }}>📸</span>
+                            <div>
+                              <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Paper Slip Scanner</div>
+                              <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>Reads handwriting</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <span style={{ fontSize: '20px' }}>🛡️</span>
+                            <div>
+                              <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>100% Private & Safe</div>
+                              <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>Government approved</div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Right Visual Card */}
+                      <div style={{ position: 'relative' }}>
+                        <div className="floating-badge-1" style={{ position: 'absolute', top: '-18px', left: '10px', zIndex: 20, background: '#ffffff', padding: '0.5rem 0.85rem', borderRadius: 'var(--radius-full)', border: '1px solid #99f6e4', boxShadow: 'var(--shadow-md)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--medical-teal-dark)' }}>
+                          📍 16+ Hospitals within 60km Circle
+                        </div>
+                        <div className="floating-badge-2" style={{ position: 'absolute', bottom: '15px', right: '-10px', zIndex: 20, background: '#ffffff', padding: '0.5rem 0.85rem', borderRadius: 'var(--radius-full)', border: '1px solid #fecaca', boxShadow: 'var(--shadow-md)', fontSize: '0.75rem', fontWeight: 700, color: '#dc2626' }}>
+                          🚨 Live ICU & Emergency Bed Tracker
+                        </div>
+
+                        <div className="med-card" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%)', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-xl)', padding: '1.75rem', boxShadow: 'var(--shadow-lg)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Continuous Care Journey</div>
+                            <span className="badge badge-teal" style={{ fontSize: '0.6875rem' }}>Live Connected</span>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                            <div style={{ background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>1</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Village Health Centre (Arogya Mandir)</div>
+                                <div style={{ fontSize: '0.71875rem', color: 'var(--text-muted)' }}>Paper slips scanned • Saved offline</div>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 700 }}>Saved</span>
+                            </div>
+
+                            <div style={{ background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>2</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Community Clinic (Taluk)</div>
+                                <div style={{ fontSize: '0.71875rem', color: 'var(--text-muted)' }}>Doctor sees full history in 2 seconds</div>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: '#0284c7', fontWeight: 700 }}>QR Synced</span>
+                            </div>
+
+                            <div style={{ background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>3</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>District Hospital & Specialists (60km)</div>
+                                <div style={{ fontSize: '0.71875rem', color: 'var(--text-muted)' }}>Smooth referral with 24/7 ICU beds</div>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 700 }}>ICU Ready</span>
+                            </div>
+
+                            <div style={{ background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid #99f6e4', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f0fdfa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>4</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Doorstep Village Health Worker (ASHA)</div>
+                                <div style={{ fontSize: '0.71875rem', color: 'var(--text-muted)' }}>Medicine reminders & home blood pressure checks</div>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: '#0d9488', fontWeight: 700 }}>Home Care</span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+                  </div>
+                </section>
+
+                {/* 60KM RADIUS HOSPITAL FINDER SECTION */}
+                <section id="facilities" style={{ padding: '5rem 0 5.5rem 0', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-light)' }}>
+                  <div className="app-container">
+                    
+                    <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 2.5rem auto' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', background: 'var(--medical-teal-subtle)', border: '1px solid #99f6e4', padding: '0.35rem 0.9rem', borderRadius: 'var(--radius-full)', fontSize: '0.8125rem', color: 'var(--medical-teal-dark)', fontWeight: 700, marginBottom: '0.85rem' }}>
+                        <span>📍</span>
+                        <span>60km Radius Local Hospital Finder</span>
+                      </div>
+
+                      <h2 style={{ fontSize: 'clamp(1.85rem, 3.2vw, 2.5rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.85rem' }}>
+                        Find All Private & Government Hospitals Near You
+                      </h2>
+
+                      <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto' }}>
+                        Instantly discover every hospital, clinic, and 24/7 emergency centre within <strong>60 km</strong> of your location. Check real-time free beds, on-duty doctors, and government free scheme (Ayushman Bharat) acceptance.
+                      </p>
+                    </div>
+
+                    {/* CONTROLS CARD */}
+                    <div className="med-card" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', marginBottom: '1.75rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', alignItems: 'center' }}>
+                        
+                        {/* 1. Location Detection */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.45rem' }}>
+                            🧭 Your Location:
+                          </label>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <button 
+                              onClick={handleDetectGPS} 
+                              disabled={isLocating}
+                              className="btn btn-teal btn-sm"
+                            >
+                              <span>{isLocating ? '⏳ Detecting...' : '📍 Use Live GPS'}</span>
+                            </button>
+                            <select 
+                              className="form-input"
+                              style={{ flex: 1, minWidth: '160px', padding: '0.45rem 0.75rem', fontSize: '0.8125rem', fontWeight: 600 }}
+                              value={PRESET_REGIONS.find(r => r.name === userLocation.name)?.id || 'custom'}
+                              onChange={(e) => {
+                                const found = PRESET_REGIONS.find(r => r.id === e.target.value);
+                                if (found) setUserLocation({ name: found.name, lat: found.lat, lng: found.lng, isLiveGps: false });
+                              }}
+                            >
+                              {PRESET_REGIONS.map(r => (
+                                <option key={r.id} value={r.id}>📍 {r.name}</option>
+                              ))}
+                              {userLocation.isLiveGps && <option value="custom">📍 My Live GPS Location</option>}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* 2. Radius Controller (60km Default & Highlighted) */}
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)' }}>
+                              🔘 Search Radius:
+                            </span>
+                            <span style={{ color: 'var(--medical-teal-dark)', fontWeight: 800, background: 'var(--medical-teal-subtle)', padding: '0.1rem 0.5rem', borderRadius: 'var(--radius-full)', border: '1px solid #99f6e4', fontSize: '0.75rem' }}>
+                              {radiusKm} km radius
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            {[10, 25, 50, 60, 80].map(km => (
+                              <button
+                                key={km}
+                                onClick={() => setRadiusKm(km)}
+                                style={{
+                                  flex: 1,
+                                  minWidth: '50px',
+                                  padding: '0.45rem 0.4rem',
+                                  fontSize: '0.8125rem',
+                                  fontWeight: radiusKm === km ? 800 : 600,
+                                  backgroundColor: radiusKm === km ? 'var(--primary-navy)' : '#ffffff',
+                                  color: radiusKm === km ? '#ffffff' : 'var(--text-main)',
+                                  border: radiusKm === km ? '1px solid var(--primary-navy)' : '1px solid var(--border-medium)',
+                                  borderRadius: 'var(--radius-md)',
+                                  cursor: 'pointer',
+                                  position: 'relative'
+                                }}
+                              >
+                                {km} km
+                                {km === 60 && (
+                                  <span style={{ position: 'absolute', top: '-8px', right: '-4px', backgroundColor: '#14b8a6', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '1px 4px', borderRadius: '4px' }}>
+                                    60KM
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 3. Search Bar */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.45rem' }}>
+                            🔍 Search Hospital or Specialty:
+                          </label>
+                          <input 
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g. Heart, Delivery, General, SNR, Manipal..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
+                          />
+                        </div>
+
+                      </div>
+
+                      {/* Filter Chips */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => setCategoryFilter('ALL')}
+                            style={{ background: categoryFilter === 'ALL' ? 'var(--medical-teal)' : '#fff', color: categoryFilter === 'ALL' ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-full)', padding: '0.35rem 0.85rem', fontSize: '0.78125rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            All Hospitals ({hospitals.length})
+                          </button>
+                          <button
+                            onClick={() => setCategoryFilter('Government')}
+                            style={{ background: categoryFilter === 'Government' ? 'var(--medical-teal)' : '#fff', color: categoryFilter === 'Government' ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-full)', padding: '0.35rem 0.85rem', fontSize: '0.78125rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            🏛️ Government Hospitals Only
+                          </button>
+                          <button
+                            onClick={() => setCategoryFilter('Private')}
+                            style={{ background: categoryFilter === 'Private' ? 'var(--primary-navy)' : '#fff', color: categoryFilter === 'Private' ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-full)', padding: '0.35rem 0.85rem', fontSize: '0.78125rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            🏥 Private Hospitals Only
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => setEmergencyOnly(!emergencyOnly)}
+                            style={{ background: emergencyOnly ? '#fee2e2' : '#fff', color: emergencyOnly ? '#dc2626' : 'var(--text-muted)', border: `1px solid ${emergencyOnly ? '#f87171' : 'var(--border-medium)'}`, borderRadius: 'var(--radius-full)', padding: '0.35rem 0.85rem', fontSize: '0.78125rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            🚨 24/7 Emergency Care
+                          </button>
+                          <button
+                            onClick={() => setIcuOnly(!icuOnly)}
+                            style={{ background: icuOnly ? 'var(--accent-cyan-subtle)' : '#fff', color: icuOnly ? 'var(--accent-cyan)' : 'var(--text-muted)', border: `1px solid ${icuOnly ? 'var(--accent-cyan-border)' : 'var(--border-medium)'}`, borderRadius: 'var(--radius-full)', padding: '0.35rem 0.85rem', fontSize: '0.78125rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            🛏️ ICU Beds Free
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* MAP & HOSPITAL LIST SPLIT */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '1.5rem', alignItems: 'start' }} className="hospital-finder-grid">
+                      
+                      {/* Leaflet Map */}
+                      <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-medium)', padding: '0.75rem', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                        <div ref={mapContainerRef} style={{ height: '560px', width: '100%', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }} />
+                        <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', zIndex: 400, background: 'rgba(255,255,255,0.95)', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', fontSize: '0.75rem' }}>
+                          <strong>Map Legend ({radiusKm}km Circle):</strong>
+                          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                            <span>🏛️ Government</span>
+                            <span>🏥 Private</span>
+                            <span>🔵 {radiusKm}km Radius Zone</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hospital Cards List */}
+                      <div style={{ maxHeight: '580px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem', paddingRight: '0.35rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>{hospitals.length} Hospitals Found</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Within {radiusKm}km circle</span>
+                        </div>
+
+                        {hospitals.map(fac => {
+                          const isGovt = fac.category === 'Government';
+                          const isSelected = fac.id === selectedHospitalId;
+                          return (
+                            <div 
+                              key={fac.id}
+                              onClick={() => {
+                                setSelectedHospitalId(fac.id);
+                                if (mapInstanceRef.current) mapInstanceRef.current.setView([fac.lat, fac.lng], 13);
+                              }}
+                              className="med-card interactive"
+                              style={{
+                                padding: '1.15rem',
+                                border: isSelected ? '2px solid var(--medical-teal)' : '1px solid var(--border-medium)',
+                                backgroundColor: isSelected ? '#f0fdfa' : '#ffffff'
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                  <span style={{ background: isGovt ? '#f0fdfa' : '#f0f9ff', color: isGovt ? '#0f766e' : '#0369a1', border: `1px solid ${isGovt ? '#99f6e4' : '#bae6fd'}`, fontSize: '0.6875rem', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-full)' }}>
+                                    {isGovt ? '🏛️ Government' : '🏥 Private'} • {fac.facilityType}
+                                  </span>
+                                  {fac.ayushmanBharatAccepted && (
+                                    <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.6875rem', fontWeight: 700, padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-full)' }}>
+                                      ✓ Free / Ayushman Bharat
+                                    </span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--medical-teal-dark)' }}>
+                                  {fac.distanceKm} km away
+                                </span>
+                              </div>
+
+                              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.25rem' }}>
+                                {fac.name}
+                              </h3>
+                              <p style={{ fontSize: '0.78125rem', color: 'var(--text-muted)', marginBottom: '0.65rem' }}>
+                                📍 {fac.address}
+                              </p>
+
+                              <div style={{ background: '#f8fafc', borderRadius: 'var(--radius-md)', padding: '0.55rem 0.75rem', marginBottom: '0.65rem', fontSize: '0.78125rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', border: '1px solid var(--border-light)' }}>
+                                <div>Available Beds: <strong style={{ color: '#16a34a' }}>{fac.availableBeds}</strong> / {fac.totalBeds}</div>
+                                <div>ICU Beds Free: <strong>{fac.icuBeds > 0 ? `${fac.availableIcuBeds} free` : 'No ICU'}</strong></div>
+                                <div style={{ gridColumn: 'span 2' }}>Emergency: <strong>{fac.emergency24x7 ? '🚨 Open 24/7 for Emergencies' : 'Daytime Hours'}</strong></div>
+                              </div>
+
+                              <div style={{ marginBottom: '0.65rem' }}>
+                                <div style={{ fontSize: '0.71875rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.2rem' }}>Doctors Available:</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                  {fac.doctorsOnDuty.slice(0, 2).map((doc, d) => (
+                                    <div key={d}>• <strong>{doc.name}</strong> ({doc.role})</div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <a href={`tel:${fac.contact}`} className="btn btn-teal btn-sm" style={{ flex: 1, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+                                  📞 Call ({fac.contact})
+                                </a>
+                                <button onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/dir/?api=1&destination=${fac.lat},${fac.lng}`, '_blank'); }} className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
+                                  🧭 Directions
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+
+                  </div>
+                </section>
+
+                {/* HOW IT WORKS */}
+                <section id="how-it-works" style={{ padding: '5rem 0', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-light)' }}>
+                  <div className="app-container">
+                    <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3rem auto' }}>
+                      <span className="badge badge-teal" style={{ marginBottom: '0.75rem' }}>4-Step Simple Journey</span>
+                      <h2 style={{ fontSize: 'clamp(1.85rem, 3.2vw, 2.45rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.75rem' }}>
+                        How MediSetu Connects Your Care
+                      </h2>
+                      <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)' }}>
+                        From simple checkups in your village clinic to specialist hospitals within 60km.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+                      <div className="med-card">
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '1rem' }}>1</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.4rem' }}>Scan Paper Prescriptions</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Take a smartphone photo of doctor slips. The system reads handwriting and saves records 100% offline.</p>
+                      </div>
+
+                      <div className="med-card">
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '1rem' }}>2</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.4rem' }}>Doctor Sees Past History</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Scan your health card QR to instantly see previous checkups, blood sugars, and drug allergy warnings.</p>
+                      </div>
+
+                      <div className="med-card">
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '1rem' }}>3</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.4rem' }}>Direct Hospital Referral</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Smooth transfer to 60km specialist hospitals with your case notes prepared before you arrive.</p>
+                      </div>
+
+                      <div className="med-card">
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f0fdfa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '1rem' }}>4</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.4rem' }}>Doorstep Health Worker Care</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Your village ASHA worker receives reminder timetables to visit and check your recovery at home.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* SERVICES GRID */}
+                <section id="services" style={{ padding: '5rem 0', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-light)' }}>
+                  <div className="app-container">
+                    <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3rem auto' }}>
+                      <span className="badge badge-info" style={{ marginBottom: '0.75rem' }}>Everyday Practical Tools</span>
+                      <h2 style={{ fontSize: 'clamp(1.85rem, 3.2vw, 2.45rem)', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.75rem' }}>
+                        Built for You and Your Family
+                      </h2>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                      <div className="med-card">
+                        <div style={{ fontSize: '28px', marginBottom: '0.75rem' }}>📶</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>Works 100% Without Internet</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Never worry about weak mobile signal in rural areas. Records stay safely saved on your device.</p>
+                      </div>
+
+                      <div className="med-card">
+                        <div style={{ fontSize: '28px', marginBottom: '0.75rem' }}>📸</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>Smart Prescription Scanner</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Take a quick photo of handwritten notes or test slips. The system reads and types them out clearly.</p>
+                      </div>
+
+                      <div className="med-card">
+                        <div style={{ fontSize: '28px', marginBottom: '0.75rem' }}>⚡</div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>2-Second Doctor Summary</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Gives your doctor a clean 1-page summary of your health conditions, surgeries, and allergy alerts.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* STATS IMPACT */}
+                <section id="about" style={{ padding: '4.5rem 0', backgroundColor: 'var(--primary-navy)', color: '#ffffff' }}>
+                  <div className="app-container">
+                    <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 3rem auto' }}>
+                      <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', marginBottom: '0.75rem' }}>Measurable Impact</span>
+                      <h2 style={{ fontSize: 'clamp(1.85rem, 3vw, 2.35rem)', fontWeight: 800, color: '#ffffff', marginBottom: '0.75rem' }}>
+                        Bringing Better Healthcare Closer to Your Home
+                      </h2>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', textAlign: 'center' }}>
+                      <div className="stat-box" style={{ background: 'rgba(255,255,255,0.07)', padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--medical-teal-light)' }}>500+</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Connected Clinics</div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Across 12 Rural Districts</div>
+                      </div>
+
+                      <div className="stat-box" style={{ background: 'rgba(255,255,255,0.07)', padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--medical-teal-light)' }}>&lt; 2.0s</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Instant Doctor Summary</div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Immediate Case Overview</div>
+                      </div>
+
+                      <div className="stat-box" style={{ background: 'rgba(255,255,255,0.07)', padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--medical-teal-light)' }}>60 km</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Hospital Finder Radius</div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Govt & Private Coverage</div>
+                      </div>
+
+                      <div className="stat-box" style={{ background: 'rgba(255,255,255,0.07)', padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--medical-teal-light)' }}>14,200+</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Families Supported</div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Zero Lost Medical Records</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* VIEW 2: PATIENT DASHBOARD */}
+            {currentRole === 'patient' && currentUser && (
+              <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
+                
+                {/* Patient Header Card */}
+                <div className="med-card" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%)', border: '1px solid #99f6e4', marginBottom: '1.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--primary-navy-dark)', margin: 0 }}>
+                          {currentUser.name}
+                        </h2>
+                        <span className="badge badge-teal">Verified Health Card</span>
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <span>Age: {currentUser.age} Yrs ({currentUser.gender})</span>
+                        <span>•</span>
+                        <span>Blood: <strong style={{ color: '#dc2626' }}>{currentUser.bloodGroup}</strong></span>
+                        <span>•</span>
+                        <span>Card: <strong>{currentUser.abhaId}</strong></span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', marginTop: '0.35rem' }}>
+                        📍 {currentUser.village} • Local Health Worker: <strong>{currentUser.assignedAsha}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => setQrModalOpen(true)} className="btn btn-secondary btn-sm">
+                        📱 View Health QR Card
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dashboard Tabs */}
+                <div className="tabs-container">
+                  <button onClick={() => setPatientTab('timeline')} className={`tab-btn ${patientTab === 'timeline' ? 'active' : ''}`}>
+                    📋 Health History
+                  </button>
+                  <button onClick={() => setPatientTab('prescriptions')} className={`tab-btn ${patientTab === 'prescriptions' ? 'active' : ''}`}>
+                    💊 Medicine Schedule
+                  </button>
+                  <button onClick={() => setPatientTab('assistant')} className={`tab-btn ${patientTab === 'assistant' ? 'active' : ''}`}>
+                    ✨ Ask Health Questions
+                  </button>
+                  <button onClick={() => setPatientTab('facilities')} className={`tab-btn ${patientTab === 'facilities' ? 'active' : ''}`}>
+                    📍 Nearby 60km Hospitals
+                  </button>
+                </div>
+
+                {/* Tab 1: Health History */}
+                {patientTab === 'timeline' && (
+                  <div className="med-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '1rem' }}>
+                      Your Past Checkups & Lab Reports
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                          <strong style={{ color: 'var(--primary-navy)' }}>General Health Checkup & Blood Sugar</strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>24 August 2026</span>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 0.5rem 0' }}>
+                          Checked at Vokkaleri Ayushman Arogya Mandir. Blood pressure: 138/88 mmHg. Random blood sugar: 168 mg/dL.
+                        </p>
+                        <div style={{ fontSize: '0.78125rem', color: 'var(--medical-teal-dark)', fontWeight: 700 }}>
+                          Doctor Advice: Continue morning Metformin and walk 30 minutes daily.
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                          <strong style={{ color: 'var(--primary-navy)' }}>HbA1c 3-Month Diabetes Blood Test</strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>12 July 2026</span>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 0.5rem 0' }}>
+                          Tested at SNR District Hospital. HbA1c result: 7.6% (Slightly high). Urine microalbumin: 38 mg/L.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Prescriptions Schedule */}
+                {patientTab === 'prescriptions' && (
+                  <div className="med-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '1rem' }}>
+                      Your Daily Medicine Timetable
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#d97706', marginBottom: '0.25rem' }}>☀️ MORNING (After Breakfast)</div>
+                        <h4 style={{ fontSize: '1.05rem', color: 'var(--primary-navy-dark)', margin: '0 0 0.25rem 0' }}>Metformin 500mg (1 Tablet)</h4>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>For controlling blood sugar</div>
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-navy)' }}>Telmisartan 40mg (1 Tablet) — for BP</div>
+                      </div>
+
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#16a34a', marginBottom: '0.25rem' }}>🌙 NIGHT (After Dinner)</div>
+                        <h4 style={{ fontSize: '1.05rem', color: 'var(--primary-navy-dark)', margin: '0 0 0.25rem 0' }}>Metformin 500mg (1 Tablet)</h4>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>For controlling blood sugar</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: Ask Health Questions */}
+                {patientTab === 'assistant' && (
+                  <div className="med-card" style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-navy-dark)', margin: 0 }}>
+                        Ask Questions About Your Health
+                      </h3>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <button onClick={() => setAiLang('en')} className={`btn btn-sm ${aiLang === 'en' ? 'btn-primary' : 'btn-secondary'}`}>English</button>
+                        <button onClick={() => setAiLang('hi')} className={`btn btn-sm ${aiLang === 'hi' ? 'btn-primary' : 'btn-secondary'}`}>हिंदी</button>
+                        <button onClick={() => setAiLang('kn')} className={`btn btn-sm ${aiLang === 'kn' ? 'btn-primary' : 'btn-secondary'}`}>ಕನ್ನಡ</button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder={aiLang === 'hi' ? 'जैसे: क्या मैं बुखार में पैरासिटामोल ले सकता हूँ?' : aiLang === 'kn' ? 'ಉದಾಹರಣೆಗೆ: ನನಗೆ ಜ್ವರ ಬಂದರೆ ಯಾವ ಮಾತ್ರೆ ತೆಗೆದುಕೊಳ್ಳಬೇಕು?' : 'e.g. Can I take Paracetamol for fever? Or how is my sugar?'} 
+                        value={aiQuery} 
+                        onChange={(e) => setAiQuery(e.target.value)} 
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleAskAI(); }}
+                      />
+                      <button onClick={handleAskAI} className="btn btn-teal">
+                        Ask
+                      </button>
+                    </div>
+
+                    {aiAnswer && (
+                      <div style={{ background: 'var(--medical-teal-subtle)', border: '1px solid #99f6e4', borderRadius: 'var(--radius-md)', padding: '1rem', marginTop: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--medical-teal-dark)', marginBottom: '0.25rem' }}>ANSWER BASED ON YOUR RECORDS:</div>
+                        <p style={{ fontSize: '0.9375rem', color: 'var(--text-main)', lineHeight: '1.6', margin: 0 }}>
+                          {aiAnswer}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab 4: 60km Hospitals */}
+                {patientTab === 'facilities' && (
+                  <div className="med-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '1rem' }}>
+                      Hospitals Near You (60km Radius)
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {hospitals.slice(0, 5).map(h => (
+                        <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                          <div>
+                            <strong style={{ color: 'var(--primary-navy)' }}>{h.name}</strong>
+                            <div style={{ fontSize: '0.78125rem', color: 'var(--text-muted)' }}>{h.category} • {h.address}</div>
+                          </div>
+                          <a href={`tel:${h.contact}`} className="btn btn-teal btn-sm" style={{ textDecoration: 'none' }}>
+                            📞 {h.distanceKm} km away
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* VIEW 3: DOCTOR DASHBOARD */}
+            {currentRole === 'doctor' && currentUser && (
+              <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
+                <div className="med-card" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)', border: '1px solid var(--border-medium)', marginBottom: '1.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary-navy-dark)', margin: 0 }}>
+                        {currentUser.name} ({currentUser.qualifications})
+                      </h2>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        Duty Station: <strong>{currentUser.currentPlaceOfPractice}</strong> • UID: {currentUser.uid}
+                      </div>
+                    </div>
+                    <div style={{ background: 'var(--medical-teal-subtle)', padding: '0.4rem 0.85rem', borderRadius: 'var(--radius-full)', border: '1px solid #99f6e4', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--medical-teal-dark)' }}>
+                      Active Patient: Ramesh Gowda (48y M)
+                    </div>
+                  </div>
+                </div>
+
+                <div className="med-card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span className="badge badge-teal">2-Second Patient Summary</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+                    Health Overview — Ramesh Gowda
+                  </h3>
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', marginBottom: '1rem', color: '#dc2626', fontWeight: 700, fontSize: '0.875rem' }}>
+                    🚨 Severe Penicillin Allergy Alert: Strictly avoid Amoxicillin, Ampicillin & Augmentin.
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '1rem', fontSize: '0.875rem', lineHeight: '1.6' }}>
+                    <strong>Clinical Summary:</strong> 48yo male with Type-2 Diabetes and Hypertension. Latest HbA1c is 7.6%. BP is controlled at 138/88 mmHg. Taking Metformin 500mg BID and Telmisartan 40mg OD. Regular visits with village ASHA worker Kavitha M.
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button onClick={() => alert('New digital prescription created and synced to patient!')} className="btn btn-primary btn-sm">
+                      ✍️ Write New Prescription
+                    </button>
+                    <button onClick={() => alert('Referral sent to SNR District Hospital with instant summary handover!')} className="btn btn-outline-teal btn-sm">
+                      🏥 Send Referral to 60km Specialist Hospital
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* QR MODAL */}
+          {qrModalOpen && (
+            <div className="modal-backdrop" onClick={() => setQrModalOpen(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
+                  Digital Health Card QR
+                </h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                  Show this QR code at any clinic or hospital to open your health records instantly.
+                </p>
+                <div style={{ width: '200px', height: '200px', margin: '0 auto 1.25rem auto', padding: '10px', background: '#fff', border: '2px dashed var(--medical-teal)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ABHA-91-4428-9912-7741-RameshGowda" alt="QR Code" style={{ width: '100%', height: '100%' }} />
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary-navy)' }}>
+                  Ramesh Gowda • 91-4428-9912-7741
+                </div>
+                <button onClick={() => setQrModalOpen(false)} className="btn btn-secondary btn-sm" style={{ marginTop: '1.25rem', width: '100%' }}>
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer style={{ backgroundColor: 'var(--primary-navy-dark)', color: '#ffffff', padding: '3.5rem 0 2rem 0', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div className="app-container">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+                <div>
+                  <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '0.75rem' }}>🩺 MediSetu Health</h4>
+                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6' }}>Simple, unbroken healthcare for villages and towns. Keeping records safe and connecting hospitals within 60km.</p>
+                </div>
+                <div>
+                  <h4 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem' }}>Covered Regions (60km)</h4>
+                  <div style={{ fontSize: '0.8125rem', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <span>• Kolar District & Taluks</span>
+                    <span>• Bangarapet & Malur</span>
+                    <span>• Hoskote & East Bangalore Rural</span>
+                    <span>• Mulbagal & Chintamani</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '0.75rem' }}>Emergency Helpline</h4>
+                  <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
+                    <div>Ambulance: <strong style={{ color: '#f87171' }}>108</strong></div>
+                    <div>Health Helpline: <strong style={{ color: '#14b8a6' }}>104</strong></div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.25rem', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center' }}>
+                © {new Date().getFullYear()} MediSetu. Built for everyday families, doctors, and village health workers.
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

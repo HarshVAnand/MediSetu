@@ -1,17 +1,40 @@
-import React from 'react';
-import { Building, Users, ShieldCheck, Zap, Activity } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Building2, Users, ShieldCheck, Zap, Activity, Heart } from 'lucide-react';
+import gsap from 'gsap';
 
 export const StatsImpact = () => {
+  const sectionRef = useRef(null);
+
   const stats = [
-    { value: '500+', label: 'Connected PHCs & Sub-Centres', sub: 'Across 12 Rural Districts' },
-    { value: '< 2.0s', label: 'AI RAG Clinical Synthesis', sub: 'Instant Dossier Generation' },
-    { value: '99.4%', label: 'Offline Mesh Uptime', sub: 'Zero Lost Patient Records' },
-    { value: '14,200+', label: 'Coordinated Referrals', sub: 'From Sub-Centres to Specialists' }
+    { target: 500, suffix: '+', label: 'Connected Clinics & Health Centers', sub: 'Across 12 Rural Districts' },
+    { target: 2, prefix: '< ', suffix: 's', label: 'Instant Doctor Summary', sub: 'Shows Past History in 2 Seconds' },
+    { target: 60, suffix: ' km', label: 'Hospital Finder Coverage', sub: 'Govt & Private Emergency Network' },
+    { target: 14200, suffix: '+', label: 'Families Supported', sub: 'Zero Lost Medical Records' }
   ];
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Counter animation on scroll
+      gsap.from('.stat-box', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 85%'
+        },
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out'
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section 
       id="about"
+      ref={sectionRef}
       style={{
         padding: '4.5rem 0',
         backgroundColor: 'var(--primary-navy)',
@@ -21,20 +44,21 @@ export const StatsImpact = () => {
     >
       <div className="app-container">
         
-        <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 3rem auto' }}>
+        <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 3rem auto' }}>
           <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', marginBottom: '0.75rem' }}>
-            National Rural Health Impact
+            Real Impact for Everyday People
           </span>
           <h2 style={{
-            fontSize: 'clamp(1.8rem, 3vw, 2.3rem)',
+            fontSize: 'clamp(1.85rem, 3vw, 2.35rem)',
             fontWeight: 800,
             color: '#ffffff',
-            marginBottom: '0.75rem'
+            marginBottom: '0.75rem',
+            lineHeight: 1.2
           }}>
-            Closing the Healthcare Divide with Measurable Results
+            Bringing Better Healthcare Closer to Your Home
           </h2>
-          <p style={{ fontSize: '0.95rem', color: '#cbd5e1' }}>
-            Ensuring every rural citizen receives unbroken, longitudinal medical care regardless of geography.
+          <p style={{ fontSize: '0.975rem', color: '#cbd5e1' }}>
+            Ensuring every family receives uninterrupted medical care and instant hospital access when they need it most.
           </p>
         </div>
 
@@ -46,12 +70,14 @@ export const StatsImpact = () => {
           {stats.map((stat, idx) => (
             <div 
               key={idx}
+              className="stat-box"
               style={{
-                background: 'rgba(255, 255, 255, 0.06)',
+                background: 'rgba(255, 255, 255, 0.07)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '1.75rem 1.25rem',
-                textAlign: 'center'
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
               }}
             >
               <div style={{
@@ -61,12 +87,12 @@ export const StatsImpact = () => {
                 lineHeight: 1.1,
                 marginBottom: '0.5rem'
               }}>
-                {stat.value}
+                {stat.prefix || ''}{stat.target.toLocaleString()}{stat.suffix || ''}
               </div>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.25rem' }}>
                 {stat.label}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <div style={{ fontSize: '0.78125rem', color: '#94a3b8' }}>
                 {stat.sub}
               </div>
             </div>

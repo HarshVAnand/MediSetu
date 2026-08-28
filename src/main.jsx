@@ -1,36 +1,49 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 import { seedInitialDatabase } from './services/db.js';
 import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Initialize Lenis Smooth Scrolling
-const initSmoothScroll = () => {
-  // Only initialize on desktop/mouse devices to protect mobile accessibility & form inputs
-  if (window.innerWidth > 768) {
+// Register GSAP Plugins
+gsap.registerPlugin(ScrollTrigger);
+
+// Initialize Lenis Smooth Scrolling and link with GSAP Ticker
+const initLenisSmoothScroll = () => {
+  try {
     const lenis = new Lenis({
-      duration: 1.1,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.9,
-      touchMultiplier: 1.5,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.2,
+      infinite: false
     });
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
+    // Synchronize Lenis scroll position with GSAP ScrollTrigger
+    lenis.on('scroll', () => {
+      ScrollTrigger.update();
+    });
 
-    requestAnimationFrame(raf);
+    // Hook Lenis into GSAP's internal RAF ticker for 60fps / 120fps sync
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+    window.lenis = lenis;
+  } catch (err) {
+    console.warn('Lenis smooth scroll fallback:', err);
   }
 };
 
-// Seed database and initialize root
-seedInitialDatabase().catch(err => console.error('DB seed error:', err));
-initSmoothScroll();
+// Seed sample patient & doctor database and start smooth scrolling
+seedInitialDatabase().catch((err) => console.error('DB seed error:', err));
+initLenisSmoothScroll();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

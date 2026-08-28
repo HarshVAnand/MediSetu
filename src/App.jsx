@@ -15,9 +15,9 @@ import { SyncBanner } from './components/Layout/SyncBanner.jsx';
 
 // Landing Page Components
 import { HeroSection } from './components/Landing/HeroSection.jsx';
+import { HospitalFinder60km } from './components/Landing/HospitalFinder60km.jsx';
 import { HowItWorks } from './components/Landing/HowItWorks.jsx';
 import { RoleShowcase } from './components/Landing/RoleShowcase.jsx';
-import { MapPreview } from './components/Landing/MapPreview.jsx';
 import { FeaturesGrid } from './components/Landing/FeaturesGrid.jsx';
 import { StatsImpact } from './components/Landing/StatsImpact.jsx';
 import { TrustSecurity } from './components/Landing/TrustSecurity.jsx';
@@ -61,7 +61,8 @@ import {
   FileText, 
   UserCheck, 
   HeartHandshake,
-  Stethoscope
+  Stethoscope,
+  Building2
 } from 'lucide-react';
 
 export default function App() {
@@ -137,7 +138,7 @@ export default function App() {
   // Sync Queue Processor
   const handleSyncNow = async () => {
     if (!isOnline) {
-      showToast('warning', 'Network Offline', 'Cannot sync while offline mode is simulated.');
+      showToast('warning', 'Network Offline', 'Cannot sync while offline mode is active.');
       return;
     }
 
@@ -146,16 +147,16 @@ export default function App() {
       const pending = await getPendingSyncQueue();
       for (const item of pending) {
         await markQueueItemSynced(item.id);
-        await new Promise(r => setTimeout(r, 120)); // realistic sync telemetry
+        await new Promise(r => setTimeout(r, 120));
       }
 
       await refreshAllData();
       setIsSyncing(false);
-      showToast('success', 'Sync Successful', 'All offline mutations successfully committed to ABDM National Health Mesh.');
+      showToast('success', 'Sync Successful', 'All offline records saved successfully.');
     } catch (err) {
       console.error('Sync error:', err);
       setIsSyncing(false);
-      showToast('urgent', 'Sync Failed', 'An error occurred during synchronization.');
+      showToast('urgent', 'Sync Failed', 'Could not sync records.');
     }
   };
 
@@ -165,7 +166,7 @@ export default function App() {
     setCurrentRole('patient');
     setActiveAuthModal(null);
     setActivePatientTab('timeline');
-    showToast('success', 'Welcome Back', `Logged in as ${patient.name}. Connected to ${patient.primaryCareUnit}.`);
+    showToast('success', 'Welcome Back', `Logged in as ${patient.name}.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -174,7 +175,7 @@ export default function App() {
     setCurrentRole('patient');
     setActiveAuthModal(null);
     refreshAllData();
-    showToast('success', 'ABHA Record Created', `Welcome ${newPatient.name}! Digital health profile initialized.`);
+    showToast('success', 'Health Profile Created', `Welcome ${newPatient.name}! Your free health record is ready.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -183,7 +184,7 @@ export default function App() {
     setCurrentRole('doctor');
     setActiveAuthModal(null);
     setActiveDoctorTab('dossier');
-    showToast('success', 'Practitioner Authenticated', `Welcome ${doctor.name}. Duty station: ${doctor.currentPlaceOfPractice}.`);
+    showToast('success', 'Doctor Authenticated', `Welcome ${doctor.name}.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -192,7 +193,7 @@ export default function App() {
     setCurrentRole('doctor');
     setActiveAuthModal(null);
     refreshAllData();
-    showToast('success', 'Doctor Account Created', `Welcome ${newDoctor.name}. UID: ${newDoctor.uid}.`);
+    showToast('success', 'Doctor Account Created', `Welcome ${newDoctor.name}.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -200,7 +201,7 @@ export default function App() {
     setCurrentRole('guest');
     setCurrentUser(null);
     setActiveSection('hero');
-    showToast('info', 'Logged Out', 'Switched to MediSetu public portal.');
+    showToast('info', 'Logged Out', 'Switched to MediSetu public view.');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -233,11 +234,12 @@ export default function App() {
       {/* REAL-TIME SYNC & NETWORK BANNER */}
       <SyncBanner 
         isOnline={isOnline}
-        onToggleOnline={(status) => {
-          setIsOnline(status);
-          showToast(status ? 'success' : 'urgent', status ? 'Network Restored' : 'Offline Mode Active', status ? 'Connected to ABDM cloud network.' : 'Switched to local IndexedDB persistence.');
+        onToggleNetwork={() => {
+          const next = !isOnline;
+          setIsOnline(next);
+          showToast(next ? 'success' : 'warning', next ? 'Online Mode' : 'Offline Mode', next ? 'Connected to cloud sync.' : 'Saving locally on this device.');
         }}
-        pendingCount={pendingSyncCount}
+        pendingSyncCount={pendingSyncCount}
         onSyncNow={handleSyncNow}
         isSyncing={isSyncing}
       />
@@ -257,7 +259,7 @@ export default function App() {
       {/* TOAST ALERTS */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      {/* DIGITAL ABHA QR CARD MODAL */}
+      {/* DIGITAL HEALTH CARD QR MODAL */}
       <QRModal 
         isOpen={qrModalOpen} 
         onClose={() => setQrModalOpen(false)}
@@ -303,9 +305,12 @@ export default function App() {
               onOpenAuthModal={(type) => setActiveAuthModal(type)}
               onExploreMap={() => handleNavigate('facilities')}
             />
+            
+            {/* 60KM RADIUS HOSPITAL FINDER (GOVERNMENT & PRIVATE) */}
+            <HospitalFinder60km />
+
             <HowItWorks />
             <RoleShowcase onOpenAuthModal={(type) => setActiveAuthModal(type)} />
-            <MapPreview />
             <FeaturesGrid />
             <StatsImpact />
             <TrustSecurity onOpenAuthModal={(type) => setActiveAuthModal(type)} />
@@ -323,14 +328,14 @@ export default function App() {
               onOpenUploadModal={() => setActivePatientTab('upload')}
             />
 
-            {/* DASHBOARD TAB NAVIGATION */}
+            {/* DASHBOARD TAB NAVIGATION IN PLAIN TERMS */}
             <div className="tabs-container">
               <button 
                 onClick={() => setActivePatientTab('timeline')}
                 className={`tab-btn ${activePatientTab === 'timeline' ? 'active' : ''}`}
               >
                 <Activity size={16} />
-                <span>Longitudinal Timeline</span>
+                <span>Health History</span>
               </button>
 
               <button 
@@ -338,7 +343,7 @@ export default function App() {
                 className={`tab-btn ${activePatientTab === 'prescriptions' ? 'active' : ''}`}
               >
                 <Pill size={16} />
-                <span>Prescriptions & Schedule</span>
+                <span>Medicine Schedule</span>
               </button>
 
               <button 
@@ -346,7 +351,7 @@ export default function App() {
                 className={`tab-btn ${activePatientTab === 'upload' ? 'active' : ''}`}
               >
                 <Upload size={16} />
-                <span>AI OCR Slip Scanner</span>
+                <span>Scan Doctor Slip</span>
               </button>
 
               <button 
@@ -354,7 +359,7 @@ export default function App() {
                 className={`tab-btn ${activePatientTab === 'referrals' ? 'active' : ''}`}
               >
                 <GitPullRequest size={16} />
-                <span>Referral Tracker ({patientReferrals.length})</span>
+                <span>Hospital Referrals ({patientReferrals.length})</span>
               </button>
 
               <button 
@@ -362,7 +367,7 @@ export default function App() {
                 className={`tab-btn ${activePatientTab === 'facilities' ? 'active' : ''}`}
               >
                 <MapPin size={16} />
-                <span>Facility Discovery</span>
+                <span>Find Hospitals (60km)</span>
               </button>
 
               <button 
@@ -370,7 +375,7 @@ export default function App() {
                 className={`tab-btn ${activePatientTab === 'assistant' ? 'active' : ''}`}
               >
                 <Sparkles size={16} />
-                <span>AI Health Assistant</span>
+                <span>Ask Health Questions</span>
               </button>
             </div>
 
@@ -395,7 +400,7 @@ export default function App() {
                 patient={currentUser}
                 onUploadComplete={(newRec) => {
                   refreshAllData();
-                  showToast('success', 'Record Digitized', 'Document converted and added to your longitudinal health timeline.');
+                  showToast('success', 'Document Saved', 'Your doctor slip was read and added to your health history.');
                   setActivePatientTab('timeline');
                 }}
               />
@@ -441,19 +446,19 @@ export default function App() {
               patients={patients}
               onSelectPatient={(p) => {
                 setActivePatientForDoctor(p);
-                showToast('info', 'Patient Selected', `Loaded clinical graph for ${p.name}.`);
+                showToast('info', 'Patient Selected', `Loaded records for ${p.name}.`);
               }}
               onOpenQRScanner={() => setQrModalOpen(true)}
             />
 
-            {/* DOCTOR DASHBOARD TABS */}
+            {/* DOCTOR DASHBOARD TABS IN PLAIN TERMS */}
             <div className="tabs-container">
               <button 
                 onClick={() => setActiveDoctorTab('dossier')}
                 className={`tab-btn ${activeDoctorTab === 'dossier' ? 'active' : ''}`}
               >
                 <Sparkles size={16} />
-                <span>AI Clinical Dossier (RAG)</span>
+                <span>2-Second Patient Summary</span>
               </button>
 
               <button 
@@ -461,15 +466,15 @@ export default function App() {
                 className={`tab-btn ${activeDoctorTab === 'prescribe' ? 'active' : ''}`}
               >
                 <Pill size={16} />
-                <span>Create Prescription</span>
+                <span>Write Prescription</span>
               </button>
 
               <button 
                 onClick={() => setActiveDoctorTab('referral')}
                 className={`tab-btn ${activeDoctorTab === 'referral' ? 'active' : ''}`}
               >
-                <GitPullRequest size={16} />
-                <span>Issue Referral</span>
+                <Building2 size={16} />
+                <span>Send to Hospital / Specialist</span>
               </button>
 
               <button 
@@ -477,7 +482,7 @@ export default function App() {
                 className={`tab-btn ${activeDoctorTab === 'asha-tasks' ? 'active' : ''}`}
               >
                 <HeartHandshake size={16} />
-                <span>Delegate ASHA Follow-up</span>
+                <span>Assign Home Checkup (ASHA)</span>
               </button>
 
               <button 
@@ -485,7 +490,7 @@ export default function App() {
                 className={`tab-btn ${activeDoctorTab === 'timeline' ? 'active' : ''}`}
               >
                 <Activity size={16} />
-                <span>Patient Health Graph</span>
+                <span>Health History</span>
               </button>
 
               <button 
@@ -493,7 +498,7 @@ export default function App() {
                 className={`tab-btn ${activeDoctorTab === 'network' ? 'active' : ''}`}
               >
                 <MapPin size={16} />
-                <span>District Hospital Network</span>
+                <span>60km Hospital Network</span>
               </button>
             </div>
 
@@ -513,7 +518,7 @@ export default function App() {
                 patient={activePatientForDoctor}
                 onPrescriptionCreated={() => {
                   refreshAllData();
-                  showToast('success', 'Prescription Issued', `E-Prescription saved to ${activePatientForDoctor?.name}'s record.`);
+                  showToast('success', 'Prescription Saved', `Prescription saved to ${activePatientForDoctor?.name}'s file.`);
                 }}
               />
             )}
@@ -524,7 +529,7 @@ export default function App() {
                 patient={activePatientForDoctor}
                 onReferralCreated={() => {
                   refreshAllData();
-                  showToast('success', 'Referral Dispatched', `Inter-facility referral created for ${activePatientForDoctor?.name}.`);
+                  showToast('success', 'Referral Sent', `Hospital referral created for ${activePatientForDoctor?.name}.`);
                 }}
               />
             )}
@@ -536,7 +541,7 @@ export default function App() {
                 followups={patientFollowups}
                 onTaskCreated={() => {
                   refreshAllData();
-                  showToast('success', 'Task Assigned', `Community task sent to ${activePatientForDoctor?.assignedAsha || 'ASHA worker'}.`);
+                  showToast('success', 'Home Task Assigned', `Follow-up sent to ${activePatientForDoctor?.assignedAsha || 'ASHA worker'}.`);
                 }}
               />
             )}

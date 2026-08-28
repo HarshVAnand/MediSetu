@@ -1,86 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Scan, 
   FileText, 
   Stethoscope, 
-  GitBranch, 
   HeartHandshake, 
   CheckCircle2, 
   Sparkles, 
   ArrowRight,
-  Database,
-  ShieldCheck
+  ShieldCheck,
+  Building2,
+  PhoneCall
 } from 'lucide-react';
+import gsap from 'gsap';
 
 export const HowItWorks = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const sectionRef = useRef(null);
 
   const steps = [
     {
       id: 'step-1',
       number: '01',
-      title: 'Village Sub-Centre & ASHA Digitization',
-      role: 'Frontline Worker / ANM',
-      location: 'Ayushman Arogya Mandir (Village)',
-      tagline: 'Paper slips turned into structured digital ABHA records',
-      desc: 'ASHA workers and ANMs capture photos of handwritten doctor slips, lab slips, and immunization cards. The built-in AI OCR engine detects handwritten text, extracts drug names and dosages, and stores everything in IndexedDB even during full offline blackouts.',
+      title: 'Scan & Save Your Paper Slips',
+      role: 'Village Clinic & Health Helpers',
+      location: 'Village Health Centre (Arogya Mandir)',
+      tagline: 'Turn crumpled paper prescriptions into clear digital records',
+      desc: 'Take a quick photo of any doctor note, handwritten prescription slip, or vaccination card. The smart scanner reads doctor handwriting automatically and saves everything safely — even in areas with zero cell phone signal.',
       keyFeatures: [
-        'Works 100% offline without cellular coverage',
-        'AI OCR handwriting detection with confidence scoring',
-        'Automatic ABHA ID linking & local sync queueing'
+        'Works 100% offline without internet or mobile network',
+        'Smart scanner automatically types out medicine names & doses',
+        'Links directly to your free Digital Health Card (ABHA)'
       ],
       badgeColor: 'badge-teal'
     },
     {
       id: 'step-2',
       number: '02',
-      title: 'Primary Health Centre (PHC) Consultation',
-      role: 'Medical Officer (MBBS)',
-      location: 'Kolar Sub-Divisional PHC',
-      tagline: 'Longitudinal timeline view with zero missing history',
-      desc: 'When the patient visits the PHC, the Medical Officer scans the patient ABHA QR code and immediately views a complete, chronological timeline of previous screenings, blood pressures, and prescriptions across all village sub-centres.',
+      title: 'Doctor Sees Your Whole Story',
+      role: 'Clinic Doctor & Medical Officer',
+      location: 'Community Health Centre (Taluk)',
+      tagline: 'Your past medicines and allergies appear in 2 seconds',
+      desc: 'When you visit any local clinic, the doctor scans your health card QR code. They immediately see your previous blood pressure readings, past fever records, and allergy warnings without you having to carry heavy paper folders.',
       keyFeatures: [
-        'Instant chronological timeline with drug allergy alerts',
-        'Structured digital e-prescription builder',
-        'Automatic drug-drug interaction contraindication checks'
+        'Instant view of all past doctor visits and blood tests',
+        'Clear digital prescription with daily pill schedule',
+        'Automatic warnings if two medicines should not be taken together'
       ],
       badgeColor: 'badge-info'
     },
     {
       id: 'step-3',
       number: '03',
-      title: 'Inter-Tier Referral & Specialist AI RAG',
-      role: 'District Hospital Specialist',
-      location: 'SNR District Hospital & Trauma Centre',
-      tagline: '2-Second AI clinical dossier synthesis for specialists',
-      desc: 'When complex cases require specialist cardiology or obstetrics care, an inter-tier referral is initiated with digital clinical notes. The specialist at the District Hospital receives an AI RAG summary synthesizing 3 years of fragmented tests in seconds.',
+      title: 'Quick Hospital Transfer & Bed Finder',
+      role: 'Hospital Specialist & Trauma Team',
+      location: 'District Hospital & 60km Network',
+      tagline: 'Smooth transfer to larger hospitals with zero lost papers',
+      desc: 'If you need heart care, delivery support, or a hospital bed, your local doctor sends a direct digital referral. The specialist hospital gets your complete case history beforehand so they are prepared before you even arrive.',
       keyFeatures: [
-        'Triage priority tagging (Normal, Priority, Emergency)',
-        'AI RAG synthesized clinical dossier & vital trajectory',
-        'Eliminates duplicate expensive tests & saves patient travel time'
+        'Clear urgency badge (Normal Checkup, Quick Care, 24/7 Emergency)',
+        'Instant 1-page health summary for hospital specialists',
+        'Avoids repeating expensive blood tests and saves hours of waiting'
       ],
       badgeColor: 'badge-success'
     },
     {
       id: 'step-4',
       number: '04',
-      title: 'Closed-Loop Community Follow-up',
-      role: 'Village ASHA Worker & Patient',
-      location: 'Patient Household (Village)',
-      tagline: 'Continuous monitoring ensures no patient is lost to follow-up',
-      desc: 'Post-consultation instructions, dosage schedules, and BP monitoring tasks are automatically delegated back to the patient assigned village ASHA worker. Patients receive medication reminders in their regional languages.',
+      title: 'Caring Doorstep Support at Home',
+      role: 'Village Health Worker (ASHA) & Family',
+      location: 'Your Home & Village',
+      tagline: 'Friendly reminders ensure you recover fully',
+      desc: 'After your hospital visit, your daily medicine schedule is automatically shared with your local village health helper (ASHA). They visit your home to check your blood pressure, ensure you are taking your tablets, and answer family questions.',
       keyFeatures: [
-        'Automated task delegation to village ASHA workers',
-        'Medication reminder timetable (Morning/Afternoon/Night)',
-        'Multi-lingual AI Health Assistant for patient queries'
+        'Helpful reminders for morning, afternoon, and night medicines',
+        'Regular home checkups by your trusted local ASHA worker',
+        'Ask health questions anytime in Hindi, Kannada, Telugu, Tamil, or English'
       ],
       badgeColor: 'badge-warning'
     }
   ];
 
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.how-anim-title', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 80%'
+        },
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out'
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section 
       id="how-it-works"
+      ref={sectionRef}
       style={{
         padding: '5rem 0',
         backgroundColor: '#ffffff',
@@ -90,14 +110,14 @@ export const HowItWorks = () => {
       <div className="app-container">
         
         {/* SECTION HEADER */}
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
+        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3.5rem auto' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.4rem',
             background: 'var(--medical-teal-subtle)',
             border: '1px solid #99f6e4',
-            padding: '0.3rem 0.8rem',
+            padding: '0.3rem 0.85rem',
             borderRadius: 'var(--radius-full)',
             fontSize: '0.75rem',
             color: 'var(--medical-teal-dark)',
@@ -106,21 +126,22 @@ export const HowItWorks = () => {
             letterSpacing: '0.05em',
             marginBottom: '0.75rem'
           }}>
-            <GitBranch size={13} />
-            <span>End-to-End Continuity Workflow</span>
+            <Sparkles size={13} />
+            <span>4-Step Simple Journey</span>
           </div>
 
-          <h2 style={{
-            fontSize: 'clamp(1.8rem, 3vw, 2.4rem)',
+          <h2 className="how-anim-title" style={{
+            fontSize: 'clamp(1.85rem, 3.2vw, 2.45rem)',
             fontWeight: 800,
             color: 'var(--primary-navy-dark)',
-            marginBottom: '1rem'
+            marginBottom: '1rem',
+            lineHeight: 1.2
           }}>
-            How MediSetu AI Connects the Continuum of Care
+            How MediSetu Connects Your Care from Home to Hospital
           </h2>
           
-          <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-            From remote rural households to district tertiary facilities — discover how our 4-stage connected architecture preserves patient history and streamlines referrals.
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+            From simple checkups in your village to specialist care in the city — see how your health records stay safe and connected every step of the way.
           </p>
         </div>
 
@@ -154,7 +175,7 @@ export const HowItWorks = () => {
                 color: activeStep === idx ? 'var(--medical-teal-light)' : 'var(--text-subtle)',
                 marginBottom: '0.35rem'
               }}>
-                STAGE {step.number}
+                STEP {step.number}
               </div>
               <div style={{
                 fontSize: '0.9375rem',
@@ -192,11 +213,11 @@ export const HowItWorks = () => {
             gridTemplateColumns: '1.2fr 0.8fr',
             gap: '2.5rem',
             alignItems: 'center'
-          }}>
+          }} className="how-card-grid">
             
             {/* LEFT DETAILS */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                 <span className={`badge ${steps[activeStep].badgeColor}`} style={{ fontSize: '0.75rem' }}>
                   {steps[activeStep].role}
                 </span>
@@ -249,16 +270,16 @@ export const HowItWorks = () => {
               }}>
                 {activeStep === 0 && <Scan size={32} />}
                 {activeStep === 1 && <Stethoscope size={32} />}
-                {activeStep === 2 && <Sparkles size={32} />}
+                {activeStep === 2 && <Building2 size={32} />}
                 {activeStep === 3 && <HeartHandshake size={32} />}
               </div>
 
-              <h4 style={{ fontSize: '1.1rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Stage {steps[activeStep].number} In Action
+              <h4 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+                Step {steps[activeStep].number} in Everyday Life
               </h4>
 
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-                Real-time data synchronization directly via IndexedDB to ABDM national health registry standards.
+                Saves time, saves money on re-tests, and gives peace of mind to your entire family.
               </p>
 
               <div style={{
@@ -271,12 +292,12 @@ export const HowItWorks = () => {
                 border: '1px solid var(--border-light)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                  <span style={{ fontWeight: 700 }}>Network Status:</span>
-                  <span style={{ color: 'var(--success-green)', fontWeight: 700 }}>Mesh Ready (Online/Offline)</span>
+                  <span style={{ fontWeight: 700 }}>Internet Requirement:</span>
+                  <span style={{ color: 'var(--success-green)', fontWeight: 700 }}>Zero (Works 100% Offline)</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 700 }}>Encryption:</span>
-                  <span>AES-256 Client-Side Protected</span>
+                  <span style={{ fontWeight: 700 }}>Privacy & Safety:</span>
+                  <span style={{ color: 'var(--primary-navy)', fontWeight: 700 }}>Government Approved</span>
                 </div>
               </div>
             </div>
@@ -288,8 +309,8 @@ export const HowItWorks = () => {
 
       <style>{`
         @media (max-width: 768px) {
-          div[style*="gridTemplateColumns: 1.2fr 0.8fr"] {
-            gridTemplateColumns: 1fr !important;
+          .how-card-grid {
+            grid-template-columns: 1fr !important;
             gap: 1.5rem !important;
           }
         }

@@ -11,7 +11,7 @@ import {
   MapPin, 
   Shield, 
   ChevronRight,
-  Database
+  Sparkles
 } from 'lucide-react';
 
 export const Navbar = ({ 
@@ -37,7 +37,7 @@ export const Navbar = ({
       top: 0,
       zIndex: 900,
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(8px)',
+      backdropFilter: 'blur(10px)',
       borderBottom: '1px solid var(--border-light)',
       boxShadow: 'var(--shadow-sm)'
     }}>
@@ -68,7 +68,7 @@ export const Navbar = ({
                 MediSetu
               </span>
               <span style={{ 
-                fontSize: '0.8rem', 
+                fontSize: '0.75rem', 
                 fontWeight: 800, 
                 color: 'var(--medical-teal)', 
                 background: 'var(--medical-teal-subtle)', 
@@ -76,11 +76,11 @@ export const Navbar = ({
                 borderRadius: '4px',
                 border: '1px solid #99f6e4'
               }}>
-                AI
+                HEALTH
               </span>
             </div>
             <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 500, lineHeight: 1 }}>
-              Rural Healthcare Continuity Mesh
+              Easy Healthcare & 60km Hospital Finder
             </div>
           </div>
         </div>
@@ -94,6 +94,17 @@ export const Navbar = ({
               style={navLinkStyle}
             >
               Home
+            </button>
+            <button 
+              onClick={() => handleNavClick('facilities')} 
+              className={`nav-link ${activeSection === 'facilities' ? 'active' : ''}`}
+              style={{
+                ...navLinkStyle,
+                color: activeSection === 'facilities' ? 'var(--medical-teal)' : 'var(--primary-navy)',
+                fontWeight: 700
+              }}
+            >
+              📍 Find Hospitals (60km)
             </button>
             <button 
               onClick={() => handleNavClick('how-it-works')} 
@@ -114,14 +125,7 @@ export const Navbar = ({
               className={`nav-link ${activeSection === 'for-doctors' ? 'active' : ''}`}
               style={navLinkStyle}
             >
-              For Healthcare Workers
-            </button>
-            <button 
-              onClick={() => handleNavClick('facilities')} 
-              className={`nav-link ${activeSection === 'facilities' ? 'active' : ''}`}
-              style={navLinkStyle}
-            >
-              Facilities
+              For Doctors
             </button>
             <button 
               onClick={() => handleNavClick('services')} 
@@ -151,7 +155,7 @@ export const Navbar = ({
                 style={{ fontSize: '0.825rem' }}
               >
                 <User size={15} />
-                Login as patient
+                <span>Patient Login</span>
               </button>
               
               <button 
@@ -161,7 +165,7 @@ export const Navbar = ({
                 style={{ fontSize: '0.825rem' }}
               >
                 <Stethoscope size={15} />
-                Login as doctor
+                <span>Doctor Login</span>
               </button>
 
               <button 
@@ -181,10 +185,10 @@ export const Navbar = ({
                   <button 
                     onClick={onOpenQRModal}
                     className="btn btn-secondary btn-sm"
-                    title="View ABHA Digital Health QR Card"
+                    title="View Your Digital Health Card QR"
                   >
                     <QrCode size={16} />
-                    <span>ABHA Card</span>
+                    <span>Health Card</span>
                   </button>
                   
                   <div style={{
@@ -220,7 +224,7 @@ export const Navbar = ({
                       {currentUser?.name || 'Doctor'}
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-subtle)' }}>
-                      {currentUser?.uid || 'UID: HPR-KMC-77419'}
+                      {currentUser?.uid || 'ID: KMC-77419'}
                     </div>
                   </div>
                 </div>
@@ -266,13 +270,16 @@ export const Navbar = ({
           display: 'flex',
           flexDirection: 'column',
           gap: '0.75rem',
-          boxShadow: 'var(--shadow-lg)'
+          boxShadow: 'var(--shadow-lg)',
+          animation: 'fadeIn 0.2s ease-out'
         }}>
           <button onClick={() => handleNavClick('hero')} style={mobileNavLinkStyle}>Home</button>
+          <button onClick={() => handleNavClick('facilities')} style={{ ...mobileNavLinkStyle, color: 'var(--medical-teal)', fontWeight: 700 }}>
+            📍 Find Hospitals (60km Radius)
+          </button>
           <button onClick={() => handleNavClick('how-it-works')} style={mobileNavLinkStyle}>How It Works</button>
           <button onClick={() => handleNavClick('for-patients')} style={mobileNavLinkStyle}>For Patients</button>
-          <button onClick={() => handleNavClick('for-doctors')} style={mobileNavLinkStyle}>For Healthcare Workers</button>
-          <button onClick={() => handleNavClick('facilities')} style={mobileNavLinkStyle}>Facilities</button>
+          <button onClick={() => handleNavClick('for-doctors')} style={mobileNavLinkStyle}>For Doctors & Health Workers</button>
           <button onClick={() => handleNavClick('services')} style={mobileNavLinkStyle}>Services</button>
           <button onClick={() => handleNavClick('about')} style={mobileNavLinkStyle}>About</button>
           
@@ -283,24 +290,27 @@ export const Navbar = ({
               <button 
                 onClick={() => { onOpenAuthModal('patient-login'); setMobileMenuOpen(false); }}
                 className="btn btn-secondary"
+                style={{ width: '100%', justifyContent: 'center' }}
               >
-                <User size={16} /> Login as patient
+                <User size={16} /> Patient Login
               </button>
               <button 
                 onClick={() => { onOpenAuthModal('doctor-login'); setMobileMenuOpen(false); }}
                 className="btn btn-outline-teal"
+                style={{ width: '100%', justifyContent: 'center' }}
               >
-                <Stethoscope size={16} /> Login as doctor
+                <Stethoscope size={16} /> Doctor Login
               </button>
               <button 
                 onClick={() => { onOpenAuthModal('patient-register'); setMobileMenuOpen(false); }}
                 className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center' }}
               >
                 Get Started
               </button>
             </div>
           ) : (
-            <button onClick={onLogout} className="btn btn-urgent">
+            <button onClick={onLogout} className="btn btn-urgent" style={{ width: '100%', justifyContent: 'center' }}>
               <LogOut size={16} /> Logout / Switch User
             </button>
           )}
@@ -320,7 +330,7 @@ export const Navbar = ({
             display: block !important;
           }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
           .auth-action-group {
             display: none !important;
           }

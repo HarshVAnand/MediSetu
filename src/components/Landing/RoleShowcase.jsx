@@ -11,7 +11,9 @@ import {
   Users, 
   ArrowRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Building2,
+  PhoneCall
 } from 'lucide-react';
 
 export const RoleShowcase = ({ onOpenAuthModal }) => {
@@ -29,20 +31,21 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
       <div className="app-container">
         
         {/* SECTION HEADER */}
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3rem auto' }}>
+        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3rem auto' }}>
           <span className="badge badge-info" style={{ marginBottom: '0.75rem' }}>
-            Role-Based Solutions
+            Tailored For You
           </span>
           <h2 style={{
-            fontSize: 'clamp(1.8rem, 3vw, 2.4rem)',
+            fontSize: 'clamp(1.85rem, 3.2vw, 2.45rem)',
             fontWeight: 800,
             color: 'var(--primary-navy-dark)',
-            marginBottom: '1rem'
+            marginBottom: '1rem',
+            lineHeight: 1.2
           }}>
-            Designed Specifically for Patients & Rural Healthcare Workers
+            Designed for Families, Doctors & Village Health Workers
           </h2>
-          <p style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
-            MediSetu AI adapts to each role in the healthcare delivery chain — providing clear, simplified interfaces for rural families, and deep clinical intelligence for medical officers.
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)' }}>
+            Clear, easy-to-read tools for patients at home, and fast clinical summaries for doctors and village health helpers.
           </p>
 
           {/* TOGGLE TABS */}
@@ -95,7 +98,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
               }}
             >
               <Stethoscope size={16} />
-              <span>For Doctors & ASHA Workers</span>
+              <span>For Doctors & Village Health Workers</span>
             </button>
           </div>
         </div>
@@ -104,7 +107,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
         {activeTab === 'patient' && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '1.5rem',
             animation: 'fadeIn 0.3s ease-out'
           }}>
@@ -124,10 +127,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Clock size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Longitudinal Health Timeline
+                Your Lifetime Health Story
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                View your complete consultation history across village sub-centres, PHCs, and district hospitals in one continuous timeline with lab results and vitals.
+                See your full medical checkup history across village health posts, community clinics, and big hospitals on one clear screen with blood test results.
               </p>
             </div>
 
@@ -146,10 +149,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Pill size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Medication Schedule & Refills
+                Daily Medicine Timetable
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Clear morning, afternoon, and night dosage indicators with countdown timers and reminders to never miss your diabetes or BP pills.
+                Clear morning, afternoon, and night reminders with countdown timers so you never miss taking your blood pressure or sugar tablets.
               </p>
             </div>
 
@@ -168,10 +171,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Scan size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                AI Prescription & Slip Scanner
+                Doctor Slip & Report Scanner
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Take a photo of any doctor prescription slip or blood report. Our AI OCR engine extracts medicine names, dosages, and test markers automatically.
+                Take a photo of any handwritten prescription or test report. The system automatically reads and types out your medicines and advice.
               </p>
             </div>
 
@@ -190,10 +193,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <MessageSquare size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Multi-Lingual AI Health Assistant
+                Ask Health Questions in Your Language
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Ask health questions based strictly on your personal records in Hindi, Kannada, Telugu, Tamil, or English with allergy safety checks.
+                Ask any questions about your diet, medicines, and recovery in Hindi, Kannada, Telugu, Tamil, or English with instant safety checks.
               </p>
             </div>
 
@@ -204,7 +207,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
         {activeTab === 'doctor' && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '1.5rem',
             animation: 'fadeIn 0.3s ease-out'
           }}>
@@ -224,10 +227,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <FileCheck size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                AI RAG Clinical Synthesis
+                2-Second Patient Summary
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Generates a 2-second synthesized clinical summary across multi-year fragmented records with instant drug-allergy and contraindication alerts.
+                Get an instant one-page summary of years of fragmented medical slips with automatic warnings for medicine allergies.
               </p>
             </div>
 
@@ -246,10 +249,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Users size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Fast Patient ABHA Lookup
+                Instant Health Card QR Scan
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Retrieve patients in milliseconds by ABHA ID, Aadhaar number, phone, name, or digital QR scan with instant local cache fallback.
+                Open patient files in seconds by scanning their digital health QR, typing their phone number, or searching their name.
               </p>
             </div>
 
@@ -268,10 +271,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Stethoscope size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Structured E-Prescription Builder
+                Simple Digital Prescription Maker
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Rapid medication selector with dosage schedules, diagnostic tagging, and automatic sync to the patient timeline and village ASHA dashboard.
+                Quick medicine selector with dosage schedules, food timing instructions, and automatic sync to the patient's phone.
               </p>
             </div>
 
@@ -287,13 +290,13 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>
-                <MapPin size={24} />
+                <Building2 size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Inter-Tier Referral Dispatch
+                Direct Hospital Referral & Bed Booking
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Refer patients seamlessly from Sub-Centre or PHC to District Hospital with triage urgency levels (Normal, Priority, Emergency) and digital case handover.
+                Refer cases from village clinics to district specialists with urgency levels (Normal Checkup, Quick Care, 24/7 Emergency).
               </p>
             </div>
 
@@ -306,7 +309,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
             onClick={() => onOpenAuthModal(activeTab === 'patient' ? 'patient-login' : 'doctor-login')}
             className="btn btn-primary btn-lg"
           >
-            <span>{activeTab === 'patient' ? 'Open Patient Health Record' : 'Access Practitioner Coordination Station'}</span>
+            <span>{activeTab === 'patient' ? 'Open Your Health Portal' : 'Open Doctor & Clinic Portal'}</span>
             <ArrowRight size={18} />
           </button>
         </div>

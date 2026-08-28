@@ -1,5 +1,5 @@
-/* MediSetu AI - Professional Rural Healthcare Design System */
-/* Clean Light Theme, Deep Blue & Medical Teal Palette, Accessible Healthcare UI */
+/* MediSetu Health - Accessible Rural & Town Healthcare Design System */
+/* Clean Light Theme, Deep Royal Navy & Medical Emerald Teal Palette */
 
 :root {
   /* Primary & Medical Palette */
@@ -16,7 +16,7 @@
   --accent-cyan-subtle: #f0f9ff;
   --accent-cyan-border: #bae6fd;
 
-  /* State & Alert Colors (Strict Clinical Mapping) */
+  /* State & Alert Colors */
   --success-green: #16a34a;
   --success-bg: #f0fdf4;
   --success-border: #bbf7d0;
@@ -47,7 +47,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
   --shadow-md: 0 4px 12px -2px rgba(15, 76, 129, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 25px -3px rgba(15, 76, 129, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
-  --shadow-hover: 0 14px 30px -4px rgba(15, 76, 129, 0.15);
+  --shadow-hover: 0 14px 30px -4px rgba(15, 76, 129, 0.16);
 
   /* Radii */
   --radius-sm: 6px;
@@ -72,9 +72,29 @@
   padding: 0;
 }
 
+/* Lenis Smooth Scroll Recommended Rules */
+html.lenis, html.lenis-smooth {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -198,22 +218,23 @@ a:hover {
 .btn-secondary {
   background-color: var(--bg-surface);
   color: var(--primary-navy);
-  border: 1px solid var(--border-medium);
+  border-color: var(--border-medium);
 }
 
 .btn-secondary:hover {
   background-color: var(--bg-subtle);
-  border-color: var(--primary-navy-light);
+  border-color: var(--primary-navy);
 }
 
 .btn-outline-teal {
   background-color: transparent;
   color: var(--medical-teal-dark);
-  border: 1px solid var(--medical-teal);
+  border-color: var(--medical-teal);
 }
 
 .btn-outline-teal:hover {
   background-color: var(--medical-teal-subtle);
+  border-color: var(--medical-teal-dark);
 }
 
 .btn-urgent {
@@ -237,17 +258,29 @@ a:hover {
   border-radius: var(--radius-lg);
 }
 
-/* Badge System */
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.badge-teal {
+  background-color: var(--medical-teal-subtle);
+  color: var(--medical-teal-dark);
+  border: 1px solid #99f6e4;
+}
+
+.badge-info {
+  background-color: var(--accent-cyan-subtle);
+  color: var(--primary-navy);
+  border: 1px solid var(--accent-cyan-border);
 }
 
 .badge-success {
@@ -268,143 +301,55 @@ a:hover {
   border: 1px solid var(--urgent-border);
 }
 
-.badge-info {
-  background-color: var(--accent-cyan-subtle);
-  color: var(--accent-cyan);
-  border: 1px solid var(--accent-cyan-border);
-}
-
-.badge-teal {
-  background-color: var(--medical-teal-subtle);
-  color: var(--medical-teal-dark);
-  border: 1px solid #99f6e4;
-}
-
 .badge-neutral {
   background-color: var(--bg-subtle);
   color: var(--text-muted);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-medium);
 }
 
-/* Form Elements */
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 0.4rem;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
+/* Form Controls */
+.form-input, .form-select, .form-textarea {
   width: 100%;
   font-family: inherit;
   font-size: 0.9375rem;
-  color: var(--text-main);
+  padding: 0.65rem 0.9rem;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 0.65rem 0.95rem;
+  color: var(--text-main);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
   border-color: var(--medical-teal);
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 90px;
-}
-
-/* Modal Backdrop */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1.25rem;
-  animation: fadeIn 0.2s ease-out;
-}
-
-.modal-dialog {
-  background: var(--bg-surface);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 650px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 2rem;
-  position: relative;
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.modal-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-subtle);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.modal-close-btn:hover {
-  background-color: var(--bg-subtle);
-  color: var(--text-main);
-}
-
-/* Tab Navigation */
+/* Tabs Navigation */
 .tabs-container {
   display: flex;
   gap: 0.5rem;
   border-bottom: 2px solid var(--border-light);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
   overflow-x: auto;
   padding-bottom: 2px;
 }
 
 .tab-btn {
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-muted);
-  padding: 0.75rem 1.25rem;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
 }
@@ -415,38 +360,41 @@ a:hover {
 
 .tab-btn.active {
   color: var(--primary-navy);
+  font-weight: 700;
   border-bottom-color: var(--medical-teal);
 }
 
-/* Leaflet Map Specific Styling */
-.leaflet-container {
-  font-family: inherit !important;
-  border-radius: var(--radius-lg);
-  z-index: 10;
+/* Modal Backdrop & Popup */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-.custom-map-popup .leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md);
+.modal-content {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
-  padding: 0;
-  overflow: hidden;
+  border: 1px solid var(--border-light);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.custom-map-popup .leaflet-popup-content {
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Keyframes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
+@keyframes modalPop {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(12px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -454,26 +402,10 @@ a:hover {
   }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes scanLaser {
-  0% { top: 0%; opacity: 0.8; }
-  50% { top: 95%; opacity: 1; }
-  100% { top: 0%; opacity: 0.8; }
-}
-
-.scan-laser-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, rgba(13,148,136,0) 0%, #0d9488 50%, rgba(13,148,136,0) 100%);
-  box-shadow: 0 0 10px #0d9488, 0 0 20px #14b8a6;
-  animation: scanLaser 2s infinite ease-in-out;
-  pointer-events: none;
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsiveness */
@@ -489,6 +421,7 @@ a:hover {
   .btn {
     padding: 0.6rem 1rem;
     font-size: 0.875rem;
+    min-height: 44px; /* Touch target accessibility */
   }
 
   .tabs-container {
