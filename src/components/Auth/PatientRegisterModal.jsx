@@ -208,7 +208,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
         <form onSubmit={handleSubmit}>
           
           {/* PERSONAL DETAILS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.85rem' }}>
+          <div className="doctor-form-grid-3">
             <div className="form-group">
               <label className="form-label">Full Name *</label>
               <input 
@@ -245,7 +245,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="doctor-form-grid-2">
             <div className="form-group">
               <label className="form-label">Email Address (for Login) *</label>
               <input 

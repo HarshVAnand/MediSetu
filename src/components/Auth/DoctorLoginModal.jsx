@@ -49,8 +49,7 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
 
   const handleSelectDemo = (doctor) => {
     setEmail(doctor.email);
-    setPassword(doctor.password || 'doctor123');
-    onLoginSuccess(doctor);
+    setPassword(doctor.password || "");
   };
 
   return (

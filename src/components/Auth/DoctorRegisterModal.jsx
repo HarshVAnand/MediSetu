@@ -1,3 +1,4 @@
+import "../../index.css";
 import React, { useState } from 'react';
 import { X, Stethoscope, Award, Building2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { dbPut, enqueueSyncAction } from '../../services/db.js';
@@ -83,7 +84,10 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+      <div
+  className="modal-dialog doctor-modal"
+  onClick={(e) => e.stopPropagation()}
+      >
         
         {/* HEADER */}
         <div className="modal-header">
@@ -144,7 +148,13 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
 
         {/* REGISTRATION FORM */}
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.85rem' }}>
+          <div
+            className="doctor-form-grid-2"
+            style={{
+              display: 'grid',
+              gap: '0.85rem'
+           }}
+          >
             <div className="form-group">
               <label className="form-label">Doctor Name *</label>
               <input 
@@ -181,7 +191,13 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div
+            className="doctor-form-grid-2"
+            style={{
+              display: 'grid',
+              gap: '0.85rem'
+           }}
+          >
             <div className="form-group">
               <label className="form-label">UID (HPR / State Medical Council Reg No.) *</label>
               <input 
@@ -218,7 +234,13 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div
+            className="doctor-form-grid-2"
+            style={{
+             display: 'grid',
+             gap: '0.85rem'
+            }}
+          >
             <div className="form-group">
               <label className="form-label">Specialization / Department</label>
               <select 
@@ -247,7 +269,13 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div
+             className="doctor-form-grid-2"
+             style={{
+               display: 'grid',
+               gap: '0.85rem'
+              }}
+          >
             <div className="form-group">
               <label className="form-label">Official Email (for Login) *</label>
               <input 
@@ -273,12 +301,19 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
           </div>
 
           {/* SUBMIT BUTTON */}
-          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="btn btn-teal btn-lg" 
-              style={{ width: '100%' }}
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem'
+           }}
+          >
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn btn-teal btn-lg"
+                style={{ width: '100%' }}
             >
               {isSubmitting ? 'Registering Practitioner Profile...' : 'Complete Doctor Registration'}
             </button>

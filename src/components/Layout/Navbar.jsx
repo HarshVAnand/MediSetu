@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  HeartHandshake, 
-  Activity, 
-  User, 
-  Stethoscope, 
-  LogOut, 
-  Menu, 
-  X, 
-  QrCode, 
-  MapPin, 
-  Shield, 
-  ChevronRight,
-  Sparkles
+import {
+  Activity,
+  User,
+  Stethoscope,
+  LogOut,
+  Menu,
+  X,
+  QrCode
 } from 'lucide-react';
 
 export const Navbar = ({ 
@@ -167,6 +162,15 @@ export const Navbar = ({
                 <Stethoscope size={15} />
                 <span>Doctor Login</span>
               </button>
+              <button
+                  id="btn-register-doctor"
+                  onClick={() => onOpenAuthModal('doctor-register')}
+                  className="btn btn-teal btn-sm"
+                  style={{ fontSize: '0.825rem' }}
+              >
+                 <Stethoscope size={15} />
+                 <span>Doctor Register</span>
+                 </button>
 
               <button 
                 id="btn-get-started"
@@ -301,6 +305,16 @@ export const Navbar = ({
               >
                 <Stethoscope size={16} /> Doctor Login
               </button>
+              <button
+                  onClick={() => {
+                  onOpenAuthModal('doctor-register');
+                  setMobileMenuOpen(false);
+                }}
+                  className="btn btn-teal"
+                  style={{ width: '100%', justifyContent: 'center' }}
+              >
+  <Stethoscope size={16} /> Doctor Register
+</button>
               <button 
                 onClick={() => { onOpenAuthModal('patient-register'); setMobileMenuOpen(false); }}
                 className="btn btn-primary"
