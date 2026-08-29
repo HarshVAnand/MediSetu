@@ -1,0 +1,35 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Environment variables (NEVER commit secrets!)
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# VS Code settings
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Large dataset files (optional - keep repo small)
+# Uncomment the line below if your CSV is too large for GitHub
+# *.csv
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Database files (if using SQLite anywhere)
+*.db
+*.sqlite3
