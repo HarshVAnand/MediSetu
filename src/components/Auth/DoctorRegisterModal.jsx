@@ -144,7 +144,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
 
         {/* REGISTRATION FORM */}
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-3">
             <div className="form-group">
               <label className="form-label">Doctor Name *</label>
               <input 
@@ -181,7 +181,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-2">
             <div className="form-group">
               <label className="form-label">UID (HPR / State Medical Council Reg No.) *</label>
               <input 
@@ -218,7 +218,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-2">
             <div className="form-group">
               <label className="form-label">Specialization / Department</label>
               <select 
@@ -247,7 +247,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-2">
             <div className="form-group">
               <label className="form-label">Official Email (for Login) *</label>
               <input 

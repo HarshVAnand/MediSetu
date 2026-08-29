@@ -85,7 +85,7 @@ export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCrea
         )}
 
         <form onSubmit={handleCreateTask}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-3">
             <div className="form-group">
               <label className="form-label">Task Objective *</label>
               <select 

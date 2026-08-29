@@ -219,6 +219,7 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
             {drugs.map((drug, idx) => (
               <div 
                 key={idx}
+                className="rx-drug-row-grid"
                 style={{
                   background: '#ffffff',
                   border: '1px solid var(--border-medium)',
@@ -330,8 +331,13 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
 
       <style>{`
         @media (max-width: 768px) {
-          div[style*="gridTemplateColumns: 2fr 1fr 1.2fr 1fr auto"] {
-            gridTemplateColumns: 1fr 1fr !important;
+          .rx-drug-row-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .rx-drug-row-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

@@ -208,7 +208,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
         <form onSubmit={handleSubmit}>
           
           {/* PERSONAL DETAILS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-3">
             <div className="form-group">
               <label className="form-label">Full Name *</label>
               <input 
@@ -245,7 +245,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-2">
             <div className="form-group">
               <label className="form-label">Email Address (for Login) *</label>
               <input 
@@ -270,7 +270,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
+          <div className="modal-grid-2">
             <div className="form-group">
               <label className="form-label">Phone / Mobile</label>
               <input 
@@ -319,7 +319,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
               <span>Aadhaar Card Photo / Identity Document</span>
             </label>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
               {aadharPreview ? (
                 <div style={{ position: 'relative' }}>
                   <img 
@@ -337,12 +337,12 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
                 </div>
               )}
               
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
                 <input 
                   type="file" 
                   accept="image/*,.pdf" 
                   onChange={handleFileChange}
-                  style={{ fontSize: '0.8125rem' }}
+                  style={{ fontSize: '0.8125rem', width: '100%' }}
                 />
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '0.25rem' }}>
                   Aadhaar photo is encrypted in local IndexedDB for identity verification at Sub-Centres.
@@ -374,7 +374,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+          <div className="form-grid-equal-2">
             <div className="form-group">
               <label className="form-label">Chronic Conditions</label>
               <input 

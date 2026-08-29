@@ -111,7 +111,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
       <form onSubmit={handleSubmit}>
         
         {/* TARGET FACILITY & DEPARTMENT */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid-equal-2">
           <div className="form-group">
             <label className="form-label">Receiving Health Facility *</label>
             <select 
@@ -147,7 +147,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
         {/* TRIAGE URGENCY LEVEL */}
         <div className="form-group">
           <label className="form-label">Triage Urgency Classification *</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+          <div className="form-grid-equal-3">
             
             <label style={{
               background: urgency === 'Normal' ? 'var(--accent-cyan-subtle)' : 'var(--bg-page)',

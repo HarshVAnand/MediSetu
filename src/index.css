@@ -364,37 +364,128 @@ a:hover {
   border-bottom-color: var(--medical-teal);
 }
 
-/* Modal Backdrop & Popup */
+/* Modal Backdrop & Overlay */
+.modal-overlay,
 .modal-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.25rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease-out;
 }
 
+/* Modal Content & Dialog Box */
+.modal-dialog,
 .modal-content {
   background: var(--bg-surface);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 45px -10px rgba(15, 76, 129, 0.28), var(--shadow-lg);
   border: 1px solid var(--border-light);
-  max-width: 580px;
+  max-width: 620px;
   width: 100%;
-  max-height: 90vh;
+  max-height: min(90vh, 860px);
   overflow-y: auto;
-  padding: 2rem;
+  padding: 1.75rem 2rem;
   position: relative;
-  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto;
+  box-sizing: border-box;
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-close-btn:hover {
+  background: var(--urgent-bg);
+  color: var(--urgent-red);
+  border-color: var(--urgent-border);
+  transform: rotate(90deg);
+}
+
+/* Modal Form Grids */
+.modal-grid-3,
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.modal-grid-2,
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 0.85rem;
+}
+
+.form-grid-equal-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.form-grid-equal-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-group {
+  margin-bottom: 0.85rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary-navy-dark);
+  margin-bottom: 0.35rem;
 }
 
 @keyframes modalPop {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.97);
+    transform: translateY(16px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -408,14 +499,30 @@ a:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsiveness */
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.spin-anim {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsiveness Across All Devices */
+@media (max-width: 992px) {
+  .app-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
 @media (max-width: 768px) {
   .app-container {
-    padding: 0 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
   .med-card {
-    padding: 1.15rem;
+    padding: 1.2rem;
   }
 
   .btn {
@@ -431,5 +538,30 @@ a:hover {
   .tab-btn {
     padding: 0.6rem 0.85rem;
     font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .modal-overlay,
+  .modal-backdrop {
+    padding: 0.75rem;
+    align-items: center;
+  }
+
+  .modal-dialog,
+  .modal-content {
+    padding: 1.25rem 1rem;
+    max-height: 94vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-grid-3,
+  .modal-grid-2,
+  .form-grid-3,
+  .form-grid-2,
+  .form-grid-equal-2,
+  .form-grid-equal-3 {
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
   }
 }
