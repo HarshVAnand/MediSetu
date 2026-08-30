@@ -66,7 +66,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
       await enqueueSyncAction('CREATE_REFERRAL', { refId, patientId: patient.id, urgency });
 
       setIsSubmitting(false);
-      setSuccessMsg(`Referral Token #${tokenNum} issued. Digital dossier transmitted to ${targetFac.name}.`);
+      setSuccessMsg(`Referral Token #${tokenNum} issued. Health summary sent to ${targetFac.name}.`);
       onReferralCreated && onReferralCreated(newReferral);
     } catch (err) {
       console.error(err);
@@ -80,12 +80,12 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
       {/* HEADER */}
       <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-          <span className="badge badge-info">Inter-Tier Referral Dispatch</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Connected District Network</span>
+          <span className="badge badge-info">Hospital Transfer & Referral</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>60km Hospital Network</span>
         </div>
         <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <GitPullRequest size={20} color="var(--primary-navy)" />
-          <span>Initiate Specialist Referral — {patient?.name}</span>
+          <span>Refer Patient to Specialist / Hospital — {patient?.name}</span>
         </h3>
       </div>
 
@@ -110,10 +110,10 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
 
       <form onSubmit={handleSubmit}>
         
-        {/* TARGET FACILITY & DEPARTMENT */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        {/* ROW 1: DESTINATION FACILITY & SPECIALTY */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           <div className="form-group">
-            <label className="form-label">Receiving Health Facility *</label>
+            <label className="form-label">Destination Facility (60km Network) *</label>
             <select 
               className="form-select"
               value={toFacilityId}
@@ -121,32 +121,33 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
             >
               {targetFacilities.map(f => (
                 <option key={f.id} value={f.id}>
-                  {f.name} ({f.type} • {f.distanceKm} km away)
+                  {f.category === 'Government' ? '🏛️' : '🏥'} {f.name} ({f.facilityType})
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Specialist Department *</label>
+            <label className="form-label">Target Specialty Department *</label>
             <select 
               className="form-select"
               value={toDepartment}
               onChange={(e) => setToDepartment(e.target.value)}
             >
-              <option value="Cardiology & Preventive Nephrology">Cardiology & Preventive Nephrology</option>
-              <option value="High-Risk Obstetrics & Maternal Fetal Medicine">High-Risk Obstetrics & Maternal Fetal Medicine</option>
-              <option value="Pulmonology & Critical Care">Pulmonology & Critical Care</option>
-              <option value="Orthopaedics & Trauma Surgery">Orthopaedics & Trauma Surgery</option>
+              <option value="Cardiology & Heart Care">Cardiology & Heart Care</option>
+              <option value="Orthopaedics & Joint Trauma">Orthopaedics & Joint Trauma</option>
+              <option value="Obstetrics & High-Risk Delivery">Obstetrics & High-Risk Delivery</option>
               <option value="General & Laparoscopic Surgery">General & Laparoscopic Surgery</option>
-              <option value="Paediatrics & Neonatal Intensive Care">Paediatrics & Neonatal Intensive Care</option>
+              <option value="Pulmonology & Chest Medicine">Pulmonology & Chest Medicine</option>
+              <option value="Nephrology & Dialysis Unit">Nephrology & Dialysis Unit</option>
+              <option value="Paediatrics & Neonatal Care">Paediatrics & Neonatal Care</option>
             </select>
           </div>
         </div>
 
         {/* TRIAGE URGENCY LEVEL */}
-        <div className="form-group">
-          <label className="form-label">Triage Urgency Classification *</label>
+        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+          <label className="form-label">Referral Urgency Level *</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
             
             <label style={{
@@ -248,7 +249,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
           marginBottom: '1.25rem'
         }}>
           <CheckCircle2 size={16} />
-          <span>Complete ABHA longitudinal timeline, recent lab panels, and active medications will be automatically attached.</span>
+          <span>Patient's complete health history, past reports, and medicine schedules will be automatically attached.</span>
         </div>
 
         {/* SUBMIT BUTTON */}
@@ -259,7 +260,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
           style={{ width: '100%' }}
         >
           <Send size={18} />
-          <span>{isSubmitting ? 'Transmitting Inter-Facility Referral...' : 'Issue Referral & Transmit Clinical Dossier'}</span>
+          <span>{isSubmitting ? 'Sending Referral...' : 'Send Referral & Health Summary'}</span>
         </button>
 
       </form>

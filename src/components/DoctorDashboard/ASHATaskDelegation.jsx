@@ -56,12 +56,12 @@ export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCrea
       <div className="med-card" style={{ padding: '1.75rem' }}>
         <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-            <span className="badge badge-warning">Frontline Health Worker Tasking</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Closed-Loop Community Follow-up</span>
+            <span className="badge badge-warning">Village Health Worker Task</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Home Checkup & Medicine Support</span>
           </div>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <HeartHandshake size={20} color="var(--warning-amber)" />
-            <span>Delegate Village ASHA/ANM Follow-up Task — {patient?.name}</span>
+            <span>Assign Home Visit to ASHA Worker — {patient?.name}</span>
           </h3>
         </div>
 

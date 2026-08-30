@@ -97,7 +97,7 @@ export const PatientSearch = ({ patients = [], onSelectPatient, onOpenQRScanner 
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--medical-teal-dark)', fontSize: '0.8125rem', fontWeight: 600 }}>
-                  <span>Open Dossier</span>
+                  <span>Open Summary</span>
                   <ArrowRight size={14} />
                 </div>
               </div>

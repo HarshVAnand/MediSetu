@@ -39,16 +39,17 @@ export const Toast = ({ toast, onClose }) => {
   };
 
   return (
-    <div style={{
+    <div className="toast-notification" style={{
       position: 'fixed',
       bottom: '1.5rem',
       right: '1.5rem',
-      zIndex: 9999,
+      zIndex: 999999,
       maxWidth: '420px',
+      width: 'auto',
       background: 'var(--bg-surface)',
       border: '1px solid var(--border-medium)',
       borderRadius: 'var(--radius-lg)',
-      boxShadow: 'var(--shadow-lg)',
+      boxShadow: '0 20px 35px -10px rgba(15, 76, 129, 0.25), 0 1px 3px rgba(0,0,0,0.1)',
       padding: '1rem 1.25rem',
       display: 'flex',
       alignItems: 'flex-start',
@@ -83,6 +84,17 @@ export const Toast = ({ toast, onClose }) => {
       >
         <X size={16} />
       </button>
+
+      <style>{`
+        @media (max-width: 480px) {
+          .toast-notification {
+            left: 1rem !important;
+            right: 1rem !important;
+            bottom: 1rem !important;
+            max-width: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

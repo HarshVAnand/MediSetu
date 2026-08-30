@@ -973,7 +973,7 @@ export const HospitalFinder60km = () => {
 
         @media (max-width: 992px) {
           .hospital-finder-grid {
-            grid-templateColumns: 1fr !important;
+            grid-template-columns: 1fr !important;
           }
           .mobile-view-tabs {
             display: block !important;

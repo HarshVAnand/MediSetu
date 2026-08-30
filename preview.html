@@ -36,6 +36,31 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
 
+    // --- 0. LENIS SMOOTH SCROLLING SETUP ---
+    try {
+      if (window.Lenis && window.gsap) {
+        gsap.registerPlugin(ScrollTrigger);
+        const lenis = new Lenis({
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          orientation: 'vertical',
+          gestureOrientation: 'vertical',
+          smoothWheel: true,
+          wheelMultiplier: 1.0,
+          touchMultiplier: 1.2
+        });
+
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => {
+          lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0);
+        window.lenis = lenis;
+      }
+    } catch (err) {
+      console.warn('Lenis init:', err);
+    }
+
     // --- 1. DATA & HELPER SERVICES ---
     function calculateDistance(lat1, lon1, lat2, lon2) {
       if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0;

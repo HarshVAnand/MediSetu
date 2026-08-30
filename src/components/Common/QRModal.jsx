@@ -20,7 +20,7 @@ export const QRModal = ({ isOpen, onClose, patient, mode = 'show' }) => {
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <QrCode size={20} color="var(--primary-navy)" />
-            <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Digital ABHA Health ID</h3>
+            <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Digital Health Card QR</h3>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={20} />
@@ -40,7 +40,7 @@ export const QRModal = ({ isOpen, onClose, patient, mode = 'show' }) => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <span style={{ fontSize: '0.75rem', letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>
-                Ayushman Bharat Digital Mission (ABDM)
+                National Digital Health Card
               </span>
               <span className="badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', fontSize: '0.65rem' }}>
                 VERIFIED

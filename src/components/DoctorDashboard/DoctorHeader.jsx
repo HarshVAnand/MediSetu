@@ -102,15 +102,15 @@ export const DoctorHeader = ({ doctor, patients = [], activePatient, onSelectPat
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Users size={16} color="var(--primary-navy)" />
-          <span>Today's OPD Queue: <strong>{doctor.consultationSlotsToday || 24} patients</strong></span>
+          <span>Today's Clinic Queue: <strong>{doctor.consultationSlotsToday || 24} patients</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <GitPullRequest size={16} color="var(--medical-teal)" />
-          <span>Active Inter-Tier Referrals: <strong>{doctor.activeReferralsCount || 8} cases</strong></span>
+          <span>Hospital Referrals: <strong>{doctor.activeReferralsCount || 8} cases</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Database size={16} color="var(--success-green)" />
-          <span>Local Cache: <strong style={{ color: 'var(--success-green)' }}>IndexedDB Verified</strong></span>
+          <span>Device Storage: <strong style={{ color: 'var(--success-green)' }}>Saved Safely</strong></span>
         </div>
       </div>
     </div>

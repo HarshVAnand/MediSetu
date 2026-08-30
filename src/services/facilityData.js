@@ -495,6 +495,96 @@ export const INITIAL_FACILITIES = [
       'Digital Lab & Pharmacy'
     ],
     operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-gov-kgf-01',
+    name: 'KGF General Government Hospital (Robertsonpet)',
+    category: 'Government',
+    facilityType: 'Taluk Hospital',
+    lat: 12.9580,
+    lng: 78.2710,
+    address: 'Hospital Road, Robertsonpet, KGF, Karnataka 563122',
+    contact: '+91 8153 260108',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 120,
+    availableBeds: 38,
+    icuBeds: 10,
+    availableIcuBeds: 4,
+    oxygenBeds: 30,
+    doctorsOnDuty: [
+      { name: 'Dr. Mohan Kumar, MS', role: 'General Surgeon' },
+      { name: 'Dr. Vimala Devi, MD', role: 'Maternity Specialist' }
+    ],
+    nursesOnDuty: 22,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Emergency & Casualty',
+      'Free Deliveries & C-Section',
+      'Childhood Vaccines',
+      'Blood Bank & Lab'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-gov-chik-01',
+    name: 'Chikkaballapur District Government Hospital',
+    category: 'Government',
+    facilityType: 'District Hospital',
+    lat: 13.4350,
+    lng: 77.7280,
+    address: 'B.B. Road, Chikkaballapur, Karnataka 562101',
+    contact: '+91 8156 272222',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 200,
+    availableBeds: 54,
+    icuBeds: 16,
+    availableIcuBeds: 5,
+    oxygenBeds: 50,
+    doctorsOnDuty: [
+      { name: 'Dr. Chandrasekhar, MD', role: 'General Physician' },
+      { name: 'Dr. Savitha Rani, MS', role: 'Orthopaedic Specialist' }
+    ],
+    nursesOnDuty: 32,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Trauma Care',
+      'Free Surgeries',
+      'ICU & Ventilators',
+      'CT Scan & Digital X-Ray'
+    ],
+    operatingHours: 'Open 24 Hours'
+  },
+  {
+    id: 'fac-pvt-mvj-01',
+    name: 'MVJ Medical College and Research Hospital',
+    category: 'Private',
+    facilityType: 'Super-Specialty Hospital',
+    lat: 13.0780,
+    lng: 77.7910,
+    address: 'Dandupalya, National Highway 75, Hoskote 562114',
+    contact: '+91 80 2806 0200',
+    emergency24x7: true,
+    ayushmanBharatAccepted: true,
+    totalBeds: 600,
+    availableBeds: 110,
+    icuBeds: 45,
+    availableIcuBeds: 14,
+    oxygenBeds: 100,
+    doctorsOnDuty: [
+      { name: 'Dr. Srinivas Prasad, MCh', role: 'Neurosurgeon' },
+      { name: 'Dr. Kavitha Shetty, MD', role: 'Paediatrics & Neonatal Care' }
+    ],
+    nursesOnDuty: 80,
+    ambulanceAvailable: true,
+    servicesOffered: [
+      '24/7 Level-1 Trauma & Emergency',
+      'Cardiac & Neuro ICU',
+      'Ayushman Bharat & Arogya Karnataka',
+      'Advanced Dialysis & MRI'
+    ],
+    operatingHours: 'Open 24 Hours'
   }
 ];
 

@@ -108,14 +108,14 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
       {/* HEADER */}
       <div style={{ marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <span className="badge badge-teal">AI Neural OCR Scanner</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>NLEM & ABDM Standardized</span>
+          <span className="badge badge-teal">Smart Paper Slip Scanner</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Government Standard Approved</span>
         </div>
         <h3 style={{ fontSize: '1.35rem', color: 'var(--primary-navy-dark)', margin: 0 }}>
-          Digitize Handwritten Prescriptions & Medical Slips
+          Scan & Read Handwritten Doctor Slips
         </h3>
         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Transform paper slips from village doctors, sub-centres, and labs into structured, searchable entries on your longitudinal timeline.
+          Take a photo of any handwritten prescription or test report. The scanner reads the handwriting and automatically adds it to your health history.
         </p>
       </div>
 
@@ -213,7 +213,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 style={{ flex: 1 }}
               >
                 <Sparkles size={18} />
-                <span>{isScanning ? 'Scanning & Digitizing...' : 'Run AI OCR Digitization'}</span>
+                <span>{isScanning ? 'Reading Slip...' : 'Scan & Read Doctor Slip'}</span>
               </button>
 
               <button 
@@ -242,11 +242,11 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h4 style={{ fontSize: '1.05rem', color: 'var(--primary-navy-dark)', margin: 0 }}>
-                AI Extracted Clinical Entities
+                Information Read from Slip
               </h4>
               {extractedData && (
                 <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
-                  {extractedData.confidence}% Confidence
+                  {extractedData.confidence}% Accuracy
                 </span>
               )}
             </div>
@@ -333,7 +333,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-subtle)' }}>
                 <Scan size={32} style={{ opacity: 0.4, marginBottom: '0.5rem' }} />
                 <p style={{ margin: 0, fontSize: '0.85rem' }}>
-                  Upload or select a prescription above and click "Run AI OCR Digitization" to extract structured clinical records.
+                  Upload or select a prescription photo above and click "Scan & Read Doctor Slip" to save your medicines.
                 </p>
               </div>
             ) : null}

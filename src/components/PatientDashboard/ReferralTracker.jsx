@@ -18,7 +18,7 @@ export const ReferralTracker = ({ referrals = [], followups = [], patient }) => 
       case 'Accepted':
         return <span className="badge badge-success">ACCEPTED BY SPECIALIST</span>;
       case 'Pending':
-        return <span className="badge badge-warning">TRIAGE IN PROGRESS</span>;
+        return <span className="badge badge-warning">WAITING FOR HOSPITAL REVIEW</span>;
       case 'Completed':
         return <span className="badge badge-neutral">COMPLETED</span>;
       default:
@@ -33,14 +33,14 @@ export const ReferralTracker = ({ referrals = [], followups = [], patient }) => 
       <div className="med-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
           <div>
-            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Continuity of Care</span>
+            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Doctor Referrals</span>
             <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <GitPullRequest size={20} color="var(--medical-teal)" />
-              <span>Inter-Facility Referral Tracking ({referrals.length})</span>
+              <span>Hospital Transfer & Specialist Referrals ({referrals.length})</span>
             </h3>
           </div>
           <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-            Zero-Paperwork Digital Routing
+            No Papers to Carry
           </span>
         </div>
 

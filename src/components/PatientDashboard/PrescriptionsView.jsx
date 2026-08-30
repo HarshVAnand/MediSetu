@@ -21,10 +21,10 @@ export const PrescriptionsView = ({ prescriptions = [], patient }) => {
       <div className="med-card" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%)', border: '1px solid #99f6e4' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <div>
-            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Daily Regimen</span>
+            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Daily Schedule</span>
             <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Clock size={20} color="var(--medical-teal)" />
-              <span>Today's Medication Schedule</span>
+              <span>Today's Medicine Schedule</span>
             </h3>
           </div>
           <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>

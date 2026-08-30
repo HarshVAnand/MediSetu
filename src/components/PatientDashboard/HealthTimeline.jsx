@@ -99,10 +99,10 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
         <div>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Activity size={20} color="var(--medical-teal)" />
-            <span>Longitudinal Connected Health Timeline</span>
+            <span>Lifetime Health History</span>
           </h3>
           <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-            One unified clinical timeline from village frontline screenings to district hospital consultations.
+            All your past doctor checkups, lab reports, and medicine slips in one clean timeline.
           </p>
         </div>
 
@@ -341,7 +341,7 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                         {item.details.findings && <div><strong>Specialist Findings:</strong> {item.details.findings}</div>}
                         {item.details.ocrExtracted && (
                           <div style={{ color: 'var(--medical-teal-dark)', marginTop: '0.35rem' }}>
-                            ✓ Digitized via MediSetu AI OCR (Confidence: {item.details.ocrConfidence || '97.4%'})
+                            ✓ Read & Saved by Paper Scanner ({item.details.ocrConfidence ? `${Math.round(item.details.ocrConfidence)}%` : '97%'} accuracy)
                           </div>
                         )}
                       </div>

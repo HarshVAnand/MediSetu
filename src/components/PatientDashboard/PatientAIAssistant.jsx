@@ -86,12 +86,12 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-light)' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-            <span className="badge badge-teal">Clinical RAG Engine</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Personalized Health Knowledge</span>
+            <span className="badge badge-teal">Smart Health Q&A</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Instant Answers in Your Language</span>
           </div>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Sparkles size={20} color="var(--medical-teal)" />
-            <span>MediSetu Patient AI Assistant</span>
+            <span>Ask Health & Medicine Questions</span>
           </h3>
         </div>
 
