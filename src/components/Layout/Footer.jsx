@@ -62,28 +62,13 @@ export const Footer = ({ onNavigate }) => {
               Quick Navigation
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <a href="#facilities" onClick={(e) => handleLinkClick(e, 'facilities')} style={{ color: '#cbd5e1' }}>📍 Find Nearby Hospitals (60km)</a>
-              <a href="#how-it-works" onClick={(e) => handleLinkClick(e, 'how-it-works')} style={{ color: '#cbd5e1' }}>How It Works (4 Steps)</a>
+              <a href="#facilities" onClick={(e) => handleLinkClick(e, 'facilities')} style={{ color: '#cbd5e1' }}>📍 Find Nearby Hospitals </a>
+              <a href="#how-it-works" onClick={(e) => handleLinkClick(e, 'how-it-works')} style={{ color: '#cbd5e1' }}>How It Works </a>
               <a href="#for-patients" onClick={(e) => handleLinkClick(e, 'for-patients')} style={{ color: '#cbd5e1' }}>For Patients & Families</a>
               <a href="#for-doctors" onClick={(e) => handleLinkClick(e, 'for-doctors')} style={{ color: '#cbd5e1' }}>For Doctors & Health Workers</a>
               <a href="#services" onClick={(e) => handleLinkClick(e, 'services')} style={{ color: '#cbd5e1' }}>Everyday Features</a>
             </div>
           </div>
-
-          {/* 3. LOCAL HOSPITAL REGIONS */}
-          <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', marginBottom: '1rem' }}>
-              Covered Districts (60km)
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: '#cbd5e1' }}>
-              <span>• Kolar District & Taluks</span>
-              <span>• Bangarapet & Robertsonpet</span>
-              <span>• Hoskote & East Bangalore Rural</span>
-              <span>• Malur & Mulbagal Towns</span>
-              <span>• Chintamani & Srinivaspur</span>
-            </div>
-          </div>
-
           {/* 4. EMERGENCY & HELPLINE */}
           <div>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', marginBottom: '1rem' }}>
