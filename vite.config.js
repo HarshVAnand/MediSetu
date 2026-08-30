@@ -4,10 +4,12 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/medisetu-landing-page/',
+  // Relative base path ensures the website loads flawlessly across all GitHub Pages repositories,
+  // custom domains, subpaths (/medisetu-landing-page/ or /MediSetu/), and local networks
+  base: './',
   server: {
     port: 5173,
-    host: true, // Enables local network IP access for testing on phones/tablets
+    host: true,
   },
   preview: {
     port: 4173,
