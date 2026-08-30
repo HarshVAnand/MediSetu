@@ -30,7 +30,7 @@ export const PatientSearch = ({ patients = [], onSelectPatient, onOpenQRScanner 
           <input 
             type="text"
             className="form-input"
-            placeholder="Search patient by ABHA ID, Aadhaar, Phone number, or Name..."
+            placeholder="Search patient by Health ID, Phone number, or Name..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ paddingLeft: '2.4rem' }}
@@ -41,11 +41,11 @@ export const PatientSearch = ({ patients = [], onSelectPatient, onOpenQRScanner 
         <button 
           onClick={onOpenQRScanner}
           className="btn btn-secondary"
-          title="Scan Patient ABHA QR Card"
+          title="Scan Patient Digital Health Card"
           style={{ whiteSpace: 'nowrap' }}
         >
           <QrCode size={16} color="var(--primary-navy)" />
-          <span>Scan ABHA QR</span>
+          <span>Scan Health Card QR</span>
         </button>
 
       </div>
@@ -63,7 +63,7 @@ export const PatientSearch = ({ patients = [], onSelectPatient, onOpenQRScanner 
         }}>
           {filteredPatients.length === 0 ? (
             <div style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-subtle)' }}>
-              No matching patient found in local IndexedDB registry for "{query}".
+              No matching patient found for "{query}".
             </div>
           ) : (
             filteredPatients.map(p => (
@@ -92,12 +92,12 @@ export const PatientSearch = ({ patients = [], onSelectPatient, onOpenQRScanner 
                     <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--primary-navy)' }}>{p.abhaId}</span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    📍 {p.address} • Conditions: {p.chronicConditions?.join(', ') || 'None'}
+                    📍 {p.address} • Checkups: {p.chronicConditions?.join(', ') || 'General'}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--medical-teal-dark)', fontSize: '0.8125rem', fontWeight: 600 }}>
-                  <span>Open Dossier</span>
+                  <span>Open File</span>
                   <ArrowRight size={14} />
                 </div>
               </div>

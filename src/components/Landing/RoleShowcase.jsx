@@ -9,11 +9,11 @@ import {
   MessageSquare, 
   FileCheck, 
   Users, 
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Building2,
-  PhoneCall
+  ArrowRight, 
+  ShieldCheck, 
+  CheckCircle2, 
+  Building2, 
+  PhoneCall 
 } from 'lucide-react';
 
 export const RoleShowcase = ({ onOpenAuthModal }) => {
@@ -30,8 +30,8 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
     >
       <div className="app-container">
         
-        {/* SECTION HEADER */}
-        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3rem auto' }}>
+        {/* SECTION HEADER - CENTER ALIGNED */}
+        <div className="section-center-header">
           <span className="badge badge-info" style={{ marginBottom: '0.75rem' }}>
             Tailored For You
           </span>
@@ -44,7 +44,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
           }}>
             Designed for Families, Doctors & Village Health Workers
           </h2>
-          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', maxWidth: '680px', margin: '0 auto' }}>
             Clear, easy-to-read tools for patients at home, and fast clinical summaries for doctors and village health helpers.
           </p>
 
@@ -55,7 +55,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
             border: '1px solid var(--border-medium)',
             borderRadius: 'var(--radius-full)',
             padding: '0.35rem',
-            marginTop: '1.75rem'
+            marginTop: '1.75rem',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '0.35rem'
           }}>
             <button
               onClick={() => setActiveTab('patient')}
@@ -66,7 +69,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 fontSize: '0.875rem',
                 border: 'none',
                 borderRadius: 'var(--radius-full)',
-                padding: '0.6rem 1.5rem',
+                padding: '0.6rem 1.35rem',
                 cursor: 'pointer',
                 boxShadow: activeTab === 'patient' ? 'var(--shadow-sm)' : 'none',
                 display: 'flex',
@@ -80,6 +83,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
             </button>
 
             <button
+              id="for-doctors"
               onClick={() => setActiveTab('doctor')}
               style={{
                 background: activeTab === 'doctor' ? '#ffffff' : 'transparent',
@@ -88,7 +92,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 fontSize: '0.875rem',
                 border: 'none',
                 borderRadius: 'var(--radius-full)',
-                padding: '0.6rem 1.5rem',
+                padding: '0.6rem 1.35rem',
                 cursor: 'pointer',
                 boxShadow: activeTab === 'doctor' ? 'var(--shadow-sm)' : 'none',
                 display: 'flex',
@@ -98,7 +102,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
               }}
             >
               <Stethoscope size={16} />
-              <span>For Doctors & Village Health Workers</span>
+              <span>For Doctors & Health Workers</span>
             </button>
           </div>
         </div>
@@ -107,7 +111,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
         {activeTab === 'patient' && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '1.5rem',
             animation: 'fadeIn 0.3s ease-out'
           }}>
@@ -127,10 +131,10 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 <Clock size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
-                Your Lifetime Health Story
+                Your Complete Health History
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                See your full medical checkup history across village health posts, community clinics, and big hospitals on one clear screen with blood test results.
+                See your full medical checkup history across village clinics, town hospitals, and city specialists on one clear screen with blood test results.
               </p>
             </div>
 
@@ -207,7 +211,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
         {activeTab === 'doctor' && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '1.5rem',
             animation: 'fadeIn 0.3s ease-out'
           }}>
@@ -230,7 +234,7 @@ export const RoleShowcase = ({ onOpenAuthModal }) => {
                 2-Second Patient Summary
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Get an instant one-page summary of years of fragmented medical slips with automatic warnings for medicine allergies.
+                Get an instant one-page summary of past medical checkups and slips with automatic warnings for drug allergies.
               </p>
             </div>
 

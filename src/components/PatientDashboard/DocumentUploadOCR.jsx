@@ -64,8 +64,8 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
           patientId: patient.id,
           doctorId: 'doc-001',
           doctorName: extractedData.doctorExtracted || 'Dr. Ramesh Kumar, MBBS',
-          facilityName: extractedData.facilityExtracted || 'Kolar Sub-Divisional PHC',
-          facilityTier: 'PHC',
+          facilityName: extractedData.facilityExtracted || 'Kolar Sub-Divisional Health Centre',
+          facilityTier: 'Health Centre',
           date: extractedData.dateExtracted,
           diagnosis: extractedData.extractedEntities.diagnosis,
           notes: extractedData.extractedEntities.clinicalAdvice,
@@ -79,11 +79,11 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
         id: recordId,
         patientId: patient.id,
         facilityName: extractedData.facilityExtracted,
-        facilityTier: docType === 'lab' ? 'PHC' : 'Sub-Centre',
+        facilityTier: docType === 'lab' ? 'Health Centre' : 'Village Clinic',
         date: extractedData.dateExtracted,
         type: extractedData.documentType,
         provider: extractedData.doctorExtracted,
-        summary: docType === 'lab' ? 'Blood Glucose & Renal Assessment' : extractedData.extractedEntities.diagnosis,
+        summary: docType === 'lab' ? 'Blood Sugar & Health Check' : extractedData.extractedEntities.diagnosis,
         labResults: extractedData.extractedEntities.tests || null,
         ocrExtracted: true,
         ocrConfidence: extractedData.confidence,
@@ -108,20 +108,20 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
       {/* HEADER */}
       <div style={{ marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <span className="badge badge-teal">AI Neural OCR Scanner</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>NLEM & ABDM Standardized</span>
+          <span className="badge badge-teal">Smart Doctor Slip Scanner</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Reads Handwriting & Doctor Stamps</span>
         </div>
         <h3 style={{ fontSize: '1.35rem', color: 'var(--primary-navy-dark)', margin: 0 }}>
-          Digitize Handwritten Prescriptions & Medical Slips
+          Scan Doctor Slips & Save to Your Health History
         </h3>
         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Transform paper slips from village doctors, sub-centres, and labs into structured, searchable entries on your longitudinal timeline.
+          Take a photo of any doctor note, clinic slip, or lab test to save it clearly in your family's health history.
         </p>
       </div>
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '2rem'
       }}>
         
@@ -154,7 +154,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 className="btn btn-secondary btn-sm"
                 style={{ flex: 1, fontSize: '0.75rem' }}
               >
-                🔬 Pathology Lab Report
+                🔬 Blood Test Report
               </button>
             </div>
           </div>
@@ -181,9 +181,6 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                   alt="Medical Document" 
                   style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', borderRadius: 'var(--radius-sm)' }}
                 />
-                
-                {/* Laser animation during active OCR scan */}
-                {isScanning && <div className="scan-laser-line" />}
               </div>
             ) : (
               <div>
@@ -213,7 +210,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 style={{ flex: 1 }}
               >
                 <Sparkles size={18} />
-                <span>{isScanning ? 'Scanning & Digitizing...' : 'Run AI OCR Digitization'}</span>
+                <span>{isScanning ? 'Reading Slip...' : 'Scan Doctor Slip'}</span>
               </button>
 
               <button 
@@ -228,7 +225,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
 
         </div>
 
-        {/* RIGHT COLUMN: OCR RESULTS & STRUCTURED JSON EXTRACTION */}
+        {/* RIGHT COLUMN: RESULTS */}
         <div style={{
           background: 'var(--bg-page)',
           border: '1px solid var(--border-medium)',
@@ -242,7 +239,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h4 style={{ fontSize: '1.05rem', color: 'var(--primary-navy-dark)', margin: 0 }}>
-                AI Extracted Clinical Entities
+                Information Read from Slip
               </h4>
               {extractedData && (
                 <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
@@ -261,7 +258,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 marginBottom: '1rem'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-                  <span>Digitization Progress</span>
+                  <span>Reading Progress</span>
                   <span>{scanStep.progress}%</span>
                 </div>
                 <div style={{ width: '100%', height: '6px', background: 'var(--bg-muted)', borderRadius: '3px', overflow: 'hidden', marginBottom: '0.5rem' }}>
@@ -278,14 +275,14 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 
                 <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Detected Facility & Doctor:</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Doctor & Clinic:</div>
                   <strong style={{ fontSize: '0.875rem', color: 'var(--primary-navy-dark)' }}>{extractedData.facilityExtracted}</strong>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{extractedData.doctorExtracted}</div>
                 </div>
 
                 {extractedData.extractedEntities.diagnosis && (
                   <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Extracted Diagnosis:</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Health Condition / Diagnosis:</div>
                     <strong style={{ fontSize: '0.875rem', color: 'var(--medical-teal-dark)' }}>
                       {extractedData.extractedEntities.diagnosis}
                     </strong>
@@ -296,7 +293,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 {extractedData.extractedEntities.medications && (
                   <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginBottom: '0.4rem' }}>
-                      Extracted Medicines ({extractedData.extractedEntities.medications.length}):
+                      Medicines ({extractedData.extractedEntities.medications.length}):
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                       {extractedData.extractedEntities.medications.map((m, midx) => (
@@ -313,7 +310,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 {extractedData.extractedEntities.tests && (
                   <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginBottom: '0.4rem' }}>
-                      Extracted Lab Parameters:
+                      Blood & Lab Test Results:
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                       {extractedData.extractedEntities.tests.map((t, tidx) => (
@@ -333,7 +330,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-subtle)' }}>
                 <Scan size={32} style={{ opacity: 0.4, marginBottom: '0.5rem' }} />
                 <p style={{ margin: 0, fontSize: '0.85rem' }}>
-                  Upload or select a prescription above and click "Run AI OCR Digitization" to extract structured clinical records.
+                  Upload or select a prescription above and click "Scan Doctor Slip" to read the medicines and advice.
                 </p>
               </div>
             ) : null}
@@ -350,7 +347,7 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
                 style={{ width: '100%' }}
               >
                 <Save size={18} />
-                <span>{isSaving ? 'Persisting to IndexedDB...' : 'Save to My Longitudinal Record'}</span>
+                <span>{isSaving ? 'Saving...' : 'Save to My Health History'}</span>
               </button>
             </div>
           )}
@@ -358,14 +355,6 @@ export const DocumentUploadOCR = ({ patient, onUploadComplete }) => {
         </div>
 
       </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          div[style*="gridTemplateColumns: 1fr 1fr"] {
-            gridTemplateColumns: 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

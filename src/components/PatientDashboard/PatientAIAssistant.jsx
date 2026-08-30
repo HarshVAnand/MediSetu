@@ -7,8 +7,8 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
     {
       id: 'msg-welcome',
       sender: 'ai',
-      text: `Hello ${patient?.name || 'Patient'}! I am your MediSetu AI Assistant. I have full context of your connected health record across ${patient?.primaryCareUnit || 'your local clinic'} and SNR District Hospital. You can ask me anything about your medicines, diet precautions, lab test results, or upcoming referral appointments in your preferred language.`,
-      sources: ['MediSetu Longitudinal Connected Health Graph'],
+      text: `Hello ${patient?.name || 'there'}! I am your MediSetu Health Assistant. I have all your records from ${patient?.primaryCareUnit || 'your local clinic'} and SNR District Hospital. You can ask me anything about your daily medicines, diet precautions, blood test results, or upcoming hospital appointments in your preferred language.`,
+      sources: ['Your Saved Family Health Records'],
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -21,7 +21,7 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
   const samplePrompts = [
     'Can I take Paracetamol for fever with my BP medicine?',
     'When should I take my morning diabetes tablet?',
-    'What does my HbA1c 7.6% lab result mean?',
+    'What does my HbA1c 7.6% blood sugar result mean?',
     'When is my District Hospital Cardiology appointment?'
   ];
 
@@ -86,12 +86,12 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-light)' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-            <span className="badge badge-teal">Clinical RAG Engine</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Personalized Health Knowledge</span>
+            <span className="badge badge-teal">Smart Health Helper</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Answers in Simple Everyday Language</span>
           </div>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Sparkles size={20} color="var(--medical-teal)" />
-            <span>MediSetu Patient AI Assistant</span>
+            <span>MediSetu Health Assistant</span>
           </h3>
         </div>
 
@@ -139,19 +139,22 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
         ))}
       </div>
 
-      {/* CHAT MESSAGE STREAM */}
+      {/* CHAT MESSAGES AREA */}
       <div style={{
         flex: 1,
-        maxHeight: '340px',
+        background: 'var(--bg-page)',
+        border: '1px solid var(--border-light)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '1.25rem',
         overflowY: 'auto',
-        padding: '0.5rem',
+        maxHeight: '380px',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        marginBottom: '1.25rem'
+        marginBottom: '1rem'
       }}>
         {messages.map(msg => (
-          <div 
+          <div
             key={msg.id}
             style={{
               display: 'flex',
@@ -164,56 +167,50 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
               <div style={{
                 width: '32px',
                 height: '32px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #0f4c81 0%, #0d9488 100%)',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Bot size={18} />
+                <Sparkles size={16} />
               </div>
             )}
 
             <div style={{
               background: msg.sender === 'user' ? 'var(--primary-navy)' : '#ffffff',
               color: msg.sender === 'user' ? '#ffffff' : 'var(--text-main)',
-              border: msg.sender === 'user' ? 'none' : '1px solid var(--border-medium)',
-              borderRadius: 'var(--radius-lg)',
               padding: '0.85rem 1.15rem',
+              borderRadius: msg.sender === 'user' ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
+              border: msg.sender === 'user' ? 'none' : '1px solid var(--border-light)',
               boxShadow: 'var(--shadow-sm)',
-              position: 'relative'
+              fontSize: '0.875rem',
+              lineHeight: '1.6'
             }}>
-              <div style={{ fontSize: '0.875rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
-                {msg.text}
-              </div>
+              <div>{msg.text}</div>
 
-              {msg.sources && (
+              {msg.sources && msg.sources.length > 0 && (
                 <div style={{
                   marginTop: '0.5rem',
                   paddingTop: '0.4rem',
-                  borderTop: '1px dashed var(--border-light)',
-                  fontSize: '0.7rem',
+                  borderTop: '1px solid var(--border-light)',
+                  fontSize: '0.71875rem',
                   color: 'var(--medical-teal-dark)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.35rem'
                 }}>
                   <ShieldCheck size={12} />
-                  <span>Grounding: {msg.sources.join(' • ')}</span>
+                  <span>Verified with: {msg.sources.join(', ')}</span>
                 </div>
               )}
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '0.35rem',
-                fontSize: '0.6875rem',
-                color: msg.sender === 'user' ? 'rgba(255,255,255,0.7)' : 'var(--text-subtle)'
-              }}>
-                <span>{msg.timestamp}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.35rem' }}>
+                <span style={{ fontSize: '0.6875rem', color: msg.sender === 'user' ? 'rgba(255,255,255,0.7)' : 'var(--text-subtle)' }}>
+                  {msg.timestamp}
+                </span>
 
                 {msg.sender === 'ai' && (
                   <button
@@ -228,10 +225,10 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
                       gap: '0.2rem',
                       fontSize: '0.7rem'
                     }}
-                    title="Read aloud in regional dialect"
+                    title="Read aloud"
                   >
                     <Volume2 size={13} />
-                    <span>{speakingMsgId === msg.id ? 'Speaking...' : 'Listen'}</span>
+                    <span>{speakingMsgId === msg.id ? 'Playing...' : 'Listen'}</span>
                   </button>
                 )}
               </div>
@@ -241,60 +238,46 @@ export const PatientAIAssistant = ({ patient, prescriptions = [], records = [] }
               <div style={{
                 width: '32px',
                 height: '32px',
-                borderRadius: '8px',
-                background: 'var(--bg-muted)',
-                color: 'var(--primary-navy)',
+                borderRadius: '50%',
+                background: 'var(--primary-navy)',
+                color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <User size={18} />
+                <User size={16} />
               </div>
             )}
           </div>
         ))}
 
         {isLoading && (
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', color: 'var(--text-subtle)', fontSize: '0.8125rem' }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'var(--medical-teal-subtle)',
-              color: 'var(--medical-teal)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Bot size={18} />
+          <div style={{ display: 'flex', gap: '0.75rem', alignSelf: 'flex-start' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--medical-teal)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={16} />
             </div>
-            <span>Analyzing your longitudinal medical graph...</span>
+            <div style={{ background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+              Checking your health record...
+            </div>
           </div>
         )}
       </div>
 
       {/* INPUT FORM */}
-      <form 
-        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-        style={{
-          display: 'flex',
-          gap: '0.75rem',
-          paddingTop: '0.85rem',
-          borderTop: '1px solid var(--border-light)'
-        }}
-      >
+      <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} style={{ display: 'flex', gap: '0.5rem' }}>
         <input 
           type="text"
           className="form-input"
-          placeholder="Ask about your medicines, sugar tests, or referral date..."
+          placeholder="Ask a question about your medicine, sugar, BP, or hospital visit..."
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
-          style={{ flex: 1 }}
+          disabled={isLoading}
         />
+
         <button 
-          type="submit"
-          disabled={isLoading || !inputQuery.trim()}
+          type="submit" 
+          disabled={!inputQuery.trim() || isLoading}
           className="btn btn-teal"
         >
           <Send size={16} />

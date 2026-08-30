@@ -24,7 +24,7 @@ export const FeaturesGrid = () => {
     },
     {
       icon: <Scan size={24} color="#0d9488" />,
-      title: 'Smart Paper Prescription Scanner',
+      title: 'Smart Doctor Slip Scanner',
       desc: 'Take a quick smartphone photo of any doctor’s handwritten note or blood test slip. It reads the handwriting and types out the medicine names clearly.'
     },
     {
@@ -79,7 +79,8 @@ export const FeaturesGrid = () => {
     >
       <div className="app-container">
         
-        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 3.5rem auto' }}>
+        {/* SECTION HEADER - CENTER ALIGNED */}
+        <div className="section-center-header">
           <span className="badge badge-info" style={{ marginBottom: '0.75rem' }}>
             Built for Real Everyday Needs
           </span>
@@ -92,14 +93,14 @@ export const FeaturesGrid = () => {
           }}>
             Everyday Features Built for You & Your Family
           </h2>
-          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', maxWidth: '680px', margin: '0 auto' }}>
             Simple, practical tools that make visiting clinics, finding hospitals within 60km, and managing family health stress-free.
           </p>
         </div>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem'
         }}>
           {features.map((feat, idx) => (

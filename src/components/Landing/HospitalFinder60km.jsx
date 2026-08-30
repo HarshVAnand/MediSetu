@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { 
   PRESET_REGIONS, 
   getFacilitiesWithinRadius, 
+  fetchNearbyHospitalsLive,
   calculateDistance 
 } from '../../services/facilityData.js';
 import { 
@@ -22,7 +23,9 @@ import {
   Sliders, 
   Layers,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Award
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -36,7 +39,7 @@ export const HospitalFinder60km = () => {
 
   // User Geolocation State (Default to Kolar Central)
   const [userLocation, setUserLocation] = useState({
-    name: 'Kolar City (Centre)',
+    name: 'Kolar District & City',
     lat: 13.1367,
     lng: 78.1340,
     isLiveGps: false
@@ -44,6 +47,8 @@ export const HospitalFinder60km = () => {
 
   const [isLocating, setIsLocating] = useState(false);
   const [geoError, setGeoError] = useState(null);
+  const [isLiveFetching, setIsLiveFetching] = useState(false);
+  const [liveDataset, setLiveDataset] = useState(null);
 
   // Filter States (Default radius 60km as requested)
   const [radiusKm, setRadiusKm] = useState(60);
@@ -52,8 +57,8 @@ export const HospitalFinder60km = () => {
   const [icuOnly, setIcuOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mobile View Tab: 'map' or 'list'
-  const [mobileViewTab, setMobileViewTab] = useState('split'); // 'split' | 'map' | 'list'
+  // Mobile View Tab: 'split', 'map', or 'list'
+  const [mobileViewTab, setMobileViewTab] = useState('split');
 
   // Selected Hospital for Sidebar / Modal highlight
   const [selectedHospitalId, setSelectedHospitalId] = useState(null);
@@ -68,7 +73,8 @@ export const HospitalFinder60km = () => {
       emergencyOnly,
       icuOnly,
       searchQuery
-    }
+    },
+    liveDataset
   );
 
   const selectedHospital = hospitals.find(h => h.id === selectedHospitalId) || hospitals[0] || null;
@@ -145,7 +151,7 @@ export const HospitalFinder60km = () => {
     });
   };
 
-  // Initialize Leaflet Map
+  // Initialize & Update Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -167,7 +173,7 @@ export const HospitalFinder60km = () => {
 
     const map = mapInstanceRef.current;
 
-    // Update center
+    // Update map view & center
     map.setView([userLocation.lat, userLocation.lng], radiusKm <= 25 ? 12 : radiusKm <= 60 ? 10 : 9);
 
     // Render User Location & 60km Radius Circle
@@ -177,11 +183,12 @@ export const HospitalFinder60km = () => {
     userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
       icon: createUserIcon()
     }).addTo(map);
+
     userMarkerRef.current.bindPopup(`
       <div style="font-family: inherit; font-size: 12px; padding: 4px;">
-        <strong style="color: #0284c7;">📍 Your Selected Location</strong>
+        <strong style="color: #0284c7;">📍 Your Location</strong>
         <div>${userLocation.name}</div>
-        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Showing hospitals within <strong>${radiusKm} km</strong></div>
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Searching all hospitals within <strong>${radiusKm} km</strong></div>
       </div>
     `);
 
@@ -227,24 +234,29 @@ export const HospitalFinder60km = () => {
 
           <div style="background: #f8fafc; border-radius: 6px; padding: 6px; font-size: 11px; margin-bottom: 6px; border: 1px solid #e2e8f0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-              <span>Available Beds:</span>
+              <span>Free Beds:</span>
               <strong style="color: #16a34a;">${fac.availableBeds} / ${fac.totalBeds}</strong>
             </div>
             ${fac.icuBeds > 0 ? `
               <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                <span>ICU Beds Free:</span>
-                <strong style="color: #0284c7;">${fac.availableIcuBeds} / ${fac.icuBeds}</strong>
+                <span>ICU Beds:</span>
+                <strong style="color: #0284c7;">${fac.availableIcuBeds} / ${fac.icuBeds} Free</strong>
               </div>
             ` : ''}
             <div style="display: flex; justify-content: space-between;">
               <span>Emergency:</span>
-              <strong>${fac.emergency24x7 ? '<span style="color: #dc2626; font-weight: 700;">🚨 24x7 Ready</span>' : 'Regular Hours'}</strong>
+              <strong>${fac.emergency24x7 ? '<span style="color: #dc2626; font-weight: 700;">🚨 24x7 Ready</span>' : 'Clinic Hours'}</strong>
             </div>
           </div>
 
-          <a href="tel:${fac.contact}" style="display: block; text-align: center; background: #0d9488; color: #ffffff; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; margin-top: 4px;">
-            📞 Call Now (${fac.contact})
-          </a>
+          <div style="display: flex; gap: 4px; margin-top: 4px;">
+            <a href="tel:${fac.contact}" style="flex: 1; text-align: center; background: #0d9488; color: #ffffff; padding: 5px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; text-decoration: none;">
+              📞 Call
+            </a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${fac.lat},${fac.lng}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #0f4c81; color: #ffffff; padding: 5px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; text-decoration: none;">
+              🗺️ Directions
+            </a>
+          </div>
         </div>
       `;
 
@@ -254,9 +266,9 @@ export const HospitalFinder60km = () => {
       });
     });
 
-  }, [userLocation, radiusKm, categoryFilter, emergencyOnly, icuOnly, searchQuery, selectedHospitalId]);
+  }, [userLocation, radiusKm, categoryFilter, emergencyOnly, icuOnly, searchQuery, selectedHospitalId, liveDataset]);
 
-  // GPS Geolocation Handler
+  // GPS Geolocation Handler with Live Overpass fetch
   const handleDetectLiveLocation = () => {
     if (!navigator.geolocation) {
       setGeoError('GPS location is not supported in your browser.');
@@ -267,19 +279,29 @@ export const HospitalFinder60km = () => {
     setGeoError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation({
-          name: 'Your Current Live Location (GPS)',
+          name: 'Your Live GPS Location',
           lat: latitude,
           lng: longitude,
           isLiveGps: true
         });
         setIsLocating(false);
+
+        // Fetch live OpenStreetMap hospitals for this exact coordinate
+        setIsLiveFetching(true);
+        const live = await fetchNearbyHospitalsLive(latitude, longitude, radiusKm);
+        if (live && live.length > 0) {
+          setLiveDataset(live);
+        } else {
+          setLiveDataset(null);
+        }
+        setIsLiveFetching(false);
       },
       (error) => {
         console.warn('Geolocation warning/denied:', error);
-        setGeoError('Could not fetch exact GPS. Using closest town preset.');
+        setGeoError('Could not fetch exact GPS. Select a nearby city preset.');
         setIsLocating(false);
       },
       { timeout: 10000, enableHighAccuracy: true }
@@ -287,7 +309,7 @@ export const HospitalFinder60km = () => {
   };
 
   // Preset location select
-  const handleSelectPresetRegion = (region) => {
+  const handleSelectPresetRegion = async (region) => {
     setUserLocation({
       name: region.name,
       lat: region.lat,
@@ -295,6 +317,16 @@ export const HospitalFinder60km = () => {
       isLiveGps: false
     });
     setGeoError(null);
+
+    // Fetch live data for selected preset
+    setIsLiveFetching(true);
+    const live = await fetchNearbyHospitalsLive(region.lat, region.lng, radiusKm);
+    if (live && live.length > 0) {
+      setLiveDataset(live);
+    } else {
+      setLiveDataset(null);
+    }
+    setIsLiveFetching(false);
   };
 
   return (
@@ -309,8 +341,8 @@ export const HospitalFinder60km = () => {
     >
       <div className="app-container">
         
-        {/* SECTION HEADER */}
-        <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 2.5rem auto' }}>
+        {/* SECTION HEADER - CENTER ALIGNED */}
+        <div className="section-center-header">
           
           <div style={{
             display: 'inline-flex',
@@ -340,7 +372,7 @@ export const HospitalFinder60km = () => {
             Find All Private & Government Hospitals Near You
           </h2>
 
-          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', lineHeight: '1.6', maxWidth: '700px', margin: '0 auto' }}>
+          <p style={{ fontSize: '1.025rem', color: 'var(--text-muted)', lineHeight: '1.6', maxWidth: '720px', margin: '0 auto' }}>
             Instantly discover every hospital, clinic, and 24/7 emergency centre within <strong>60 km</strong> of your location. Check real-time free beds, on-duty doctors, and government scheme availability.
           </p>
         </div>
@@ -424,7 +456,7 @@ export const HospitalFinder60km = () => {
               )}
             </div>
 
-            {/* 2. Radius Selector (60km Default & Emphasized) */}
+            {/* 2. Radius Selector (60km Default & Highlighted) */}
             <div>
               <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.45rem' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -450,207 +482,147 @@ export const HospitalFinder60km = () => {
                         padding: '0.45rem 0.4rem',
                         fontSize: '0.8125rem',
                         fontWeight: isSelected ? 800 : 600,
-                        backgroundColor: isSelected ? 'var(--primary-navy)' : '#ffffff',
-                        color: isSelected ? '#ffffff' : 'var(--text-main)',
-                        border: isSelected ? '1px solid var(--primary-navy)' : '1px solid var(--border-medium)',
-                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: isSelected ? 'var(--primary-navy)' : is60 ? 'var(--medical-teal-subtle)' : '#ffffff',
+                        color: isSelected ? '#ffffff' : is60 ? 'var(--medical-teal-dark)' : 'var(--text-muted)',
+                        border: isSelected ? '1px solid var(--primary-navy)' : is60 ? '1px solid var(--medical-teal)' : '1px solid var(--border-medium)',
+                        borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
-                        position: 'relative',
-                        boxShadow: isSelected ? 'var(--shadow-sm)' : 'none'
+                        textAlign: 'center'
                       }}
                     >
-                      {km} km
-                      {is60 && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          right: '-4px',
-                          backgroundColor: '#14b8a6',
-                          color: '#ffffff',
-                          fontSize: '0.55rem',
-                          fontWeight: 800,
-                          padding: '1px 4px',
-                          borderRadius: '4px',
-                          lineHeight: 1
-                        }}>
-                          RECOMMENDED
-                        </span>
-                      )}
+                      {km} km {is60 && '⭐'}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* 3. Search Bar by Hospital Name or Doctor Specialty */}
+            {/* 3. Search by Name, Doctor, or Facility */}
             <div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.45rem' }}>
                 <Search size={15} color="var(--medical-teal)" />
                 <span>Search Hospital or Specialty:</span>
               </label>
-              
+
               <div style={{ position: 'relative' }}>
                 <input 
                   type="text"
-                  className="form-input"
-                  placeholder="e.g. Heart, Delivery, General, SNR..."
+                  placeholder="e.g. Heart, District, Delivery, ICU..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  className="form-input"
                   style={{
-                    width: '100%',
-                    padding: '0.55rem 0.75rem 0.55rem 2rem',
-                    fontSize: '0.8125rem',
+                    paddingLeft: '2.25rem',
+                    fontSize: '0.85rem',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-medium)',
-                    backgroundColor: '#ffffff'
+                    border: '1px solid var(--border-medium)'
                   }}
                 />
-                <Search size={14} color="var(--text-subtle)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                <Search 
+                  size={15} 
+                  color="var(--text-subtle)" 
+                  style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} 
+                />
               </div>
             </div>
 
           </div>
 
-          {/* QUICK CATEGORY FILTER CHIPS */}
+          {/* SECONDARY FILTER CHIPS: ALL / GOVT / PRIVATE / EMERGENCY / ICU */}
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            flexWrap: 'wrap',
             gap: '0.75rem',
             marginTop: '1.25rem',
-            paddingTop: '1rem',
+            paddingTop: '1.25rem',
             borderTop: '1px solid var(--border-light)'
           }}>
-            
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-subtle)', marginRight: '0.25rem' }}>
+                Filter By Type:
+              </span>
+
               <button
                 onClick={() => setCategoryFilter('ALL')}
-                style={{
-                  background: categoryFilter === 'ALL' ? 'var(--medical-teal)' : '#ffffff',
-                  color: categoryFilter === 'ALL' ? '#ffffff' : 'var(--text-main)',
-                  border: `1px solid ${categoryFilter === 'ALL' ? 'var(--medical-teal)' : 'var(--border-medium)'}`,
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.78125rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
+                className={`btn btn-sm ${categoryFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
               >
                 All Hospitals ({hospitals.length})
               </button>
 
               <button
                 onClick={() => setCategoryFilter('Government')}
-                style={{
-                  background: categoryFilter === 'Government' ? 'var(--medical-teal)' : '#ffffff',
-                  color: categoryFilter === 'Government' ? '#ffffff' : 'var(--text-main)',
-                  border: `1px solid ${categoryFilter === 'Government' ? 'var(--medical-teal)' : 'var(--border-medium)'}`,
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.78125rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem'
-                }}
+                className={`btn btn-sm ${categoryFilter === 'Government' ? 'btn-teal' : 'btn-secondary'}`}
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
               >
-                <span>🏛️ Government Hospitals Only</span>
+                🏛️ Government Only
               </button>
 
               <button
                 onClick={() => setCategoryFilter('Private')}
-                style={{
-                  background: categoryFilter === 'Private' ? 'var(--primary-navy)' : '#ffffff',
-                  color: categoryFilter === 'Private' ? '#ffffff' : 'var(--text-main)',
-                  border: `1px solid ${categoryFilter === 'Private' ? 'var(--primary-navy)' : 'var(--border-medium)'}`,
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.78125rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem'
-                }}
+                className={`btn btn-sm ${categoryFilter === 'Private' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
               >
-                <span>🏥 Private Hospitals Only</span>
+                🏥 Private Only
               </button>
-            </div>
 
-            {/* TOGGLE 24x7 EMERGENCY & ICU */}
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setEmergencyOnly(!emergencyOnly)}
                 style={{
-                  background: emergencyOnly ? '#fee2e2' : '#ffffff',
-                  color: emergencyOnly ? '#dc2626' : 'var(--text-muted)',
-                  border: `1px solid ${emergencyOnly ? '#f87171' : 'var(--border-medium)'}`,
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.78125rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.3rem'
+                  gap: '0.35rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  border: emergencyOnly ? '1px solid #ef4444' : '1px solid var(--border-medium)',
+                  backgroundColor: emergencyOnly ? '#fef2f2' : '#ffffff',
+                  color: emergencyOnly ? '#dc2626' : 'var(--text-muted)',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <AlertCircle size={14} color="#dc2626" />
-                <span>🚨 24/7 Emergency Care</span>
+                <span>🚨 24/7 Emergency Ready</span>
+                {emergencyOnly && <span>✓</span>}
               </button>
 
               <button
                 onClick={() => setIcuOnly(!icuOnly)}
                 style={{
-                  background: icuOnly ? 'var(--accent-cyan-subtle)' : '#ffffff',
-                  color: icuOnly ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  border: `1px solid ${icuOnly ? 'var(--accent-cyan-border)' : 'var(--border-medium)'}`,
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.35rem 0.85rem',
-                  fontSize: '0.78125rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.3rem'
+                  gap: '0.35rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  border: icuOnly ? '1px solid #0284c7' : '1px solid var(--border-medium)',
+                  backgroundColor: icuOnly ? '#f0f9ff' : '#ffffff',
+                  color: icuOnly ? '#0369a1' : 'var(--text-muted)',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Bed size={14} />
-                <span>🛏️ ICU Beds Free</span>
+                <span>🛏️ ICU Available</span>
+                {icuOnly && <span>✓</span>}
               </button>
             </div>
 
+            {/* Total count indicator */}
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              Found <strong>{hospitals.length} hospitals</strong> within {radiusKm} km
+            </div>
           </div>
+
         </div>
 
-        {/* MOBILE VIEW TOGGLE: MAP VS LIST */}
+        {/* MOBILE VIEW TOGGLE TABS (Map vs List) */}
         <div className="mobile-view-tabs" style={{ display: 'none', marginBottom: '1rem' }}>
-          <div style={{
-            display: 'flex',
-            width: '100%',
-            background: 'var(--bg-subtle)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.25rem',
-            border: '1px solid var(--border-medium)'
-          }}>
-            <button
-              onClick={() => setMobileViewTab('map')}
-              style={{
-                flex: 1,
-                padding: '0.5rem',
-                border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                background: mobileViewTab === 'map' || mobileViewTab === 'split' ? '#ffffff' : 'transparent',
-                fontWeight: 700,
-                fontSize: '0.8125rem',
-                color: 'var(--primary-navy)'
-              }}
-            >
-              🗺️ Map View
-            </button>
+          <div style={{ display: 'flex', width: '100%', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-medium)' }}>
             <button
               onClick={() => setMobileViewTab('list')}
               style={{
@@ -659,202 +631,187 @@ export const HospitalFinder60km = () => {
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 background: mobileViewTab === 'list' ? '#ffffff' : 'transparent',
+                color: mobileViewTab === 'list' ? 'var(--primary-navy)' : 'var(--text-muted)',
                 fontWeight: 700,
                 fontSize: '0.8125rem',
-                color: 'var(--primary-navy)'
+                cursor: 'pointer',
+                boxShadow: mobileViewTab === 'list' ? 'var(--shadow-sm)' : 'none'
               }}
             >
               📋 Hospital List ({hospitals.length})
             </button>
+
+            <button
+              onClick={() => setMobileViewTab('map')}
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                background: mobileViewTab === 'map' ? '#ffffff' : 'transparent',
+                color: mobileViewTab === 'map' ? 'var(--medical-teal-dark)' : 'var(--text-muted)',
+                fontWeight: 700,
+                fontSize: '0.8125rem',
+                cursor: 'pointer',
+                boxShadow: mobileViewTab === 'map' ? 'var(--shadow-sm)' : 'none'
+              }}
+            >
+              🗺️ Interactive Map
+            </button>
           </div>
         </div>
 
-        {/* MAIN MAP & HOSPITAL CARDS SPLIT LAYOUT */}
-        <div 
-          className="hospital-finder-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.25fr 0.75fr',
-            gap: '1.5rem',
-            alignItems: 'start'
-          }}
-        >
+        {/* MAIN 2-COLUMN VIEW: MAP + HOSPITAL LIST */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1.25fr 0.95fr',
+          gap: '1.5rem',
+          alignItems: 'start'
+        }} className="finder-grid-container">
           
-          {/* LEFT: INTERACTIVE LEAFLET MAP */}
-          <div 
-            className={`map-column ${mobileViewTab === 'list' ? 'hide-on-mobile' : ''}`}
-            style={{
-              background: '#ffffff',
-              borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-medium)',
-              padding: '0.75rem',
-              boxShadow: 'var(--shadow-md)',
-              position: 'relative'
-            }}
-          >
+          {/* LEFT: LEAFLET INTERACTIVE MAP */}
+          <div className={`map-wrapper-col ${mobileViewTab === 'list' ? 'mobile-hidden' : ''}`} style={{
+            position: 'sticky',
+            top: '85px',
+            backgroundColor: '#ffffff',
+            borderRadius: 'var(--radius-xl)',
+            border: '1px solid var(--border-medium)',
+            padding: '0.75rem',
+            boxShadow: 'var(--shadow-md)',
+            overflow: 'hidden'
+          }}>
+            
+            {/* Map Header Status */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.5rem 0.75rem',
+              marginBottom: '0.5rem',
+              background: 'var(--bg-page)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.78125rem',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border-light)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }}></span>
+                <span><strong>Live GPS Active:</strong> {userLocation.name}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>🏛️ Govt Teal</span>
+                <span>•</span>
+                <span>🏥 Pvt Navy</span>
+              </div>
+            </div>
+
+            {/* Map Container */}
             <div 
-              ref={mapContainerRef}
+              ref={mapContainerRef} 
               style={{
-                height: '560px',
                 width: '100%',
+                height: '560px',
                 borderRadius: 'var(--radius-lg)',
-                overflow: 'hidden',
+                border: '1px solid var(--border-light)',
                 zIndex: 10
               }}
+              className="leaflet-responsive-container"
             />
-
-            {/* Map Legend Overlay */}
-            <div style={{
-              position: 'absolute',
-              bottom: '1.5rem',
-              left: '1.5rem',
-              zIndex: 400,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(6px)',
-              padding: '0.6rem 0.85rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-light)',
-              boxShadow: 'var(--shadow-md)',
-              fontSize: '0.75rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.35rem'
-            }}>
-              <div style={{ fontWeight: 800, color: 'var(--primary-navy-dark)', marginBottom: '0.15rem' }}>
-                Map Legend (Within {radiusKm}km):
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ display: 'inline-block', width: '12px', height: '12px', background: '#0d9488', borderRadius: '50%' }}></span>
-                <span>🏛️ Government Hospital</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ display: 'inline-block', width: '12px', height: '12px', background: '#0f4c81', borderRadius: '50%' }}></span>
-                <span>🏥 Private Hospital</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ display: 'inline-block', width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%' }}></span>
-                <span>🚨 24/7 Emergency Available</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ display: 'inline-block', width: '12px', height: '12px', background: '#0284c7', borderRadius: '50%' }}></span>
-                <span>📍 Your Location ({radiusKm}km Circle)</span>
-              </div>
-            </div>
           </div>
 
-          {/* RIGHT: SCROLLABLE HOSPITALS DIRECTORY LIST */}
+          {/* RIGHT: SCROLLABLE HOSPITALS CARDS LIST */}
           <div 
-            className={`list-column ${mobileViewTab === 'map' ? 'hide-on-mobile' : ''}`}
             ref={listContainerRef}
+            className={`list-wrapper-col ${mobileViewTab === 'map' ? 'mobile-hidden' : ''}`}
             style={{
-              maxHeight: '580px',
-              overflowY: 'auto',
-              paddingRight: '0.35rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem'
+              gap: '1rem',
+              maxHeight: '640px',
+              overflowY: 'auto',
+              paddingRight: '0.35rem'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>
-                {hospitals.length} Hospitals Found within {radiusKm} km
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
-                Sorted by closest distance
-              </div>
-            </div>
-
             {hospitals.length === 0 ? (
-              <div style={{
-                background: 'var(--bg-page)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2.5rem 1.5rem',
-                textAlign: 'center',
-                border: '1px solid var(--border-light)'
-              }}>
-                <AlertCircle size={32} color="var(--text-subtle)" style={{ marginBottom: '0.75rem' }} />
-                <h4 style={{ fontSize: '1rem', color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
-                  No hospitals matched your exact filter
+              <div className="med-card" style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-muted)' }}>
+                <AlertCircle size={36} color="var(--warning-amber)" style={{ margin: '0 auto 0.75rem auto' }} />
+                <h4 style={{ fontSize: '1.15rem', color: 'var(--primary-navy-dark)', marginBottom: '0.35rem' }}>
+                  No Hospitals Found In This Radius
                 </h4>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                  Try widening your radius to 60km or 80km, or resetting your filter tabs.
+                <p style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
+                  Try increasing your search radius to <strong>60 km</strong> or clearing active search filters.
                 </p>
-                <button 
+                <button
                   onClick={() => { setRadiusKm(60); setCategoryFilter('ALL'); setEmergencyOnly(false); setIcuOnly(false); setSearchQuery(''); }}
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-teal btn-sm"
                 >
-                  Reset All Filters to 60km Default
+                  Reset to 60km All Hospitals
                 </button>
               </div>
             ) : (
-              hospitals.map(fac => {
+              hospitals.map((fac) => {
                 const isSelected = fac.id === selectedHospitalId;
                 const isGovt = fac.category === 'Government';
 
                 return (
                   <div
                     key={fac.id}
-                    id={`hospital-card-${fac.id}`}
                     onClick={() => {
                       setSelectedHospitalId(fac.id);
                       if (mapInstanceRef.current) {
-                        mapInstanceRef.current.setView([fac.lat, fac.lng], 13);
+                        mapInstanceRef.current.setView([fac.lat, fac.lng], 13, { animate: true });
                       }
                     }}
-                    className="med-card interactive"
+                    className={`med-card interactive ${isSelected ? 'selected-hospital-card' : ''}`}
                     style={{
                       padding: '1.25rem',
                       borderRadius: 'var(--radius-lg)',
                       border: isSelected ? '2px solid var(--medical-teal)' : '1px solid var(--border-medium)',
-                      backgroundColor: isSelected ? '#f0fdfa' : '#ffffff',
-                      boxShadow: isSelected ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
-                      transition: 'all 0.2s ease',
-                      cursor: 'pointer'
+                      backgroundColor: isSelected ? 'var(--medical-teal-subtle)' : '#ffffff',
+                      boxShadow: isSelected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    {/* TOP BADGES */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                        <span style={{
-                          background: isGovt ? '#f0fdfa' : '#f0f9ff',
-                          color: isGovt ? '#0f766e' : '#0369a1',
-                          border: `1px solid ${isGovt ? '#99f6e4' : '#bae6fd'}`,
-                          fontSize: '0.6875rem',
-                          fontWeight: 800,
-                          padding: '0.2rem 0.55rem',
-                          borderRadius: 'var(--radius-full)'
-                        }}>
-                          {isGovt ? '🏛️ Government' : '🏥 Private'} • {fac.facilityType}
+                    
+                    {/* CARD TOP ROW: CATEGORY BADGE & DISTANCE */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span 
+                          className="badge" 
+                          style={{
+                            backgroundColor: isGovt ? '#f0fdfa' : '#f0f9ff',
+                            color: isGovt ? '#0f766e' : '#0369a1',
+                            border: `1px solid ${isGovt ? '#99f6e4' : '#bae6fd'}`,
+                            fontSize: '0.75rem',
+                            fontWeight: 800
+                          }}
+                        >
+                          {isGovt ? '🏛️ Government Hospital' : '🏥 Private Hospital'}
                         </span>
-
+                        
                         {fac.ayushmanBharatAccepted && (
-                          <span style={{
-                            background: '#f0fdf4',
-                            color: '#15803d',
-                            border: '1px solid #bbf7d0',
-                            fontSize: '0.6875rem',
-                            fontWeight: 700,
-                            padding: '0.2rem 0.55rem',
-                            borderRadius: 'var(--radius-full)'
-                          }}>
-                            ✓ Free Care / Ayushman Bharat
+                          <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
+                            ✓ Ayushman Free Scheme
                           </span>
                         )}
                       </div>
 
                       <div style={{
-                        fontSize: '0.8125rem',
+                        fontSize: '0.875rem',
                         fontWeight: 800,
                         color: 'var(--medical-teal-dark)',
-                        whiteSpace: 'nowrap'
+                        background: '#ffffff',
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: 'var(--radius-full)',
+                        border: '1px solid var(--border-medium)'
                       }}>
-                        {fac.distanceKm} km away
+                        📍 {fac.distanceKm} km away
                       </div>
                     </div>
 
-                    {/* HOSPITAL NAME */}
+                    {/* HOSPITAL NAME & ADDRESS */}
                     <h3 style={{
-                      fontSize: '1.05rem',
+                      fontSize: '1.125rem',
                       fontWeight: 800,
                       color: 'var(--primary-navy-dark)',
                       marginBottom: '0.25rem',
@@ -863,126 +820,105 @@ export const HospitalFinder60km = () => {
                       {fac.name}
                     </h3>
 
-                    {/* ADDRESS */}
-                    <p style={{
-                      fontSize: '0.78125rem',
-                      color: 'var(--text-muted)',
-                      marginBottom: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.35rem'
-                    }}>
-                      <MapPin size={13} color="var(--text-subtle)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <MapPin size={13} color="var(--text-subtle)" style={{ flexShrink: 0 }} />
                       <span>{fac.address}</span>
-                    </p>
+                    </div>
 
-                    {/* BEDS & EMERGENCY STATS */}
+                    {/* BEDS & EMERGENCY STATUS STRIP */}
                     <div style={{
-                      background: '#f8fafc',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '0.65rem 0.85rem',
-                      marginBottom: '0.75rem',
-                      fontSize: '0.78125rem',
-                      border: '1px solid var(--border-light)',
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '0.5rem'
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '0.5rem',
+                      background: isSelected ? '#ffffff' : 'var(--bg-page)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '0.65rem 0.75rem',
+                      border: '1px solid var(--border-light)',
+                      marginBottom: '0.85rem'
                     }}>
                       <div>
-                        <span style={{ color: 'var(--text-subtle)' }}>Available Beds: </span>
-                        <strong style={{ color: '#16a34a' }}>{fac.availableBeds}</strong> / {fac.totalBeds}
+                        <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 600 }}>Free Beds</div>
+                        <div style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'var(--success-green)' }}>
+                          {fac.availableBeds} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ {fac.totalBeds}</span>
+                        </div>
                       </div>
 
                       <div>
-                        <span style={{ color: 'var(--text-subtle)' }}>ICU Beds Free: </span>
-                        <strong>{fac.icuBeds > 0 ? `${fac.availableIcuBeds} free` : 'No ICU'}</strong>
+                        <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 600 }}>ICU Beds</div>
+                        <div style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+                          {fac.availableIcuBeds} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ {fac.icuBeds}</span>
+                        </div>
                       </div>
 
-                      <div style={{ gridColumn: 'span 2' }}>
-                        <span style={{ color: 'var(--text-subtle)' }}>Emergency: </span>
-                        <strong>{fac.emergency24x7 ? '🚨 Open 24/7 for Emergencies' : 'Standard Daytime Clinic'}</strong>
+                      <div>
+                        <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 600 }}>Emergency</div>
+                        <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: fac.emergency24x7 ? 'var(--urgent-red)' : 'var(--text-main)' }}>
+                          {fac.emergency24x7 ? '🚨 24x7' : 'Day OPD'}
+                        </div>
                       </div>
                     </div>
 
                     {/* DOCTORS ON DUTY */}
-                    <div style={{ marginBottom: '0.85rem' }}>
-                      <div style={{ fontSize: '0.71875rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.3rem' }}>
-                        Doctors Available Right Now:
+                    {fac.doctorsOnDuty && fac.doctorsOnDuty.length > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Stethoscope size={13} color="var(--medical-teal)" style={{ flexShrink: 0 }} />
+                        <span><strong>Specialists on duty:</strong> {fac.doctorsOnDuty.map(d => `${d.name} (${d.role})`).join(' • ')}</span>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {fac.doctorsOnDuty.slice(0, 2).map((doc, didx) => (
-                          <div key={didx} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                            <span style={{ color: 'var(--medical-teal)', fontWeight: 700 }}>•</span>
-                            <span><strong>{doc.name}</strong> — {doc.role}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    )}
 
-                    {/* ACTION BUTTONS */}
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {/* ACTION BUTTONS: CALL NOW + GET DIRECTIONS */}
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <a
                         href={`tel:${fac.contact}`}
-                        className="btn btn-teal btn-sm"
-                        style={{ flex: 1, padding: '0.45rem 0.75rem', fontSize: '0.78125rem', textDecoration: 'none' }}
                         onClick={(e) => e.stopPropagation()}
+                        className="btn btn-teal btn-sm"
+                        style={{ flex: 1, textDecoration: 'none', fontSize: '0.8125rem', padding: '0.45rem 0.75rem' }}
                       >
-                        <Phone size={13} />
+                        <Phone size={14} />
                         <span>Call ({fac.contact})</span>
                       </a>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const url = `https://www.google.com/maps/dir/?api=1&destination=${fac.lat},${fac.lng}`;
-                          window.open(url, '_blank');
-                        }}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${fac.lat},${fac.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="btn btn-secondary btn-sm"
-                        style={{ padding: '0.45rem 0.75rem', fontSize: '0.78125rem' }}
+                        style={{ flex: 1, textDecoration: 'none', fontSize: '0.8125rem', padding: '0.45rem 0.75rem' }}
                       >
-                        <Navigation size={13} />
-                        <span>Directions</span>
-                      </button>
+                        <Navigation size={14} />
+                        <span>Get Directions</span>
+                      </a>
                     </div>
 
                   </div>
                 );
               })
             )}
-
           </div>
 
         </div>
 
       </div>
 
-      {/* STYLES FOR RESPONSIVENESS & ANIMATIONS */}
+      {/* STYLES FOR RESPONSIVE BEHAVIOR */}
       <style>{`
-        @keyframes ping {
-          75%, 100% {
-            transform: scale(2.2);
-            opacity: 0;
-          }
-        }
-        .spin-anim {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 992px) {
-          .hospital-finder-grid {
-            grid-templateColumns: 1fr !important;
+        @media (max-width: 900px) {
+          .finder-grid-container {
+            grid-template-columns: 1fr !important;
           }
           .mobile-view-tabs {
             display: block !important;
           }
-          .hide-on-mobile {
+          .mobile-hidden {
             display: none !important;
           }
-          .list-column {
-            max-height: none !important;
+          .map-wrapper-col {
+            position: relative !important;
+            top: 0 !important;
+          }
+          .leaflet-responsive-container {
+            height: 380px !important;
           }
         }
       `}</style>

@@ -29,7 +29,8 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
             borderRadius: 'var(--radius-lg)',
             overflow: 'hidden',
             border: '2px solid var(--medical-teal)',
-            boxShadow: 'var(--shadow-sm)'
+            boxShadow: 'var(--shadow-sm)',
+            flexShrink: 0
           }}>
             <img 
               src={patient.aadharPhoto || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80'} 
@@ -44,7 +45,7 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
                 {patient.name}
               </h2>
               <span className="badge badge-teal" style={{ fontSize: '0.6875rem' }}>
-                ABDM Verified
+                Health ID Active
               </span>
             </div>
 
@@ -91,14 +92,14 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
               className="btn btn-secondary btn-sm"
             >
               <QrCode size={15} color="var(--primary-navy)" />
-              <span>View ABHA Card</span>
+              <span>Digital Health Card</span>
             </button>
 
             <button 
               onClick={onOpenUploadModal}
               className="btn btn-teal btn-sm"
             >
-              <span>+ Upload / Scan Slip</span>
+              <span>+ Scan Doctor Slip</span>
             </button>
           </div>
 
@@ -118,15 +119,15 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0d9488' }} />
-          <span style={{ color: 'var(--text-muted)' }}>Primary Unit: <strong>{patient.primaryCareUnit || 'Village Sub-Centre'}</strong></span>
+          <span style={{ color: 'var(--text-muted)' }}>Local Clinic: <strong>{patient.primaryCareUnit || 'Village Health Centre'}</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0284c7' }} />
-          <span style={{ color: 'var(--text-muted)' }}>Assigned ASHA: <strong>{patient.assignedAsha || 'Smt. Kavitha M.'}</strong></span>
+          <span style={{ color: 'var(--text-muted)' }}>Assigned Health Worker: <strong>{patient.assignedAsha || 'Smt. Kavitha M.'}</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a' }} />
-          <span style={{ color: 'var(--text-muted)' }}>Continuity Status: <strong style={{ color: 'var(--success-green)' }}>Active Sync</strong></span>
+          <span style={{ color: 'var(--text-muted)' }}>Status: <strong style={{ color: 'var(--success-green)' }}>Saved & Connected</strong></span>
         </div>
       </div>
     </div>

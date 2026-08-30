@@ -44,7 +44,8 @@ export const StatsImpact = () => {
     >
       <div className="app-container">
         
-        <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 3rem auto' }}>
+        {/* SECTION HEADER - CENTER ALIGNED */}
+        <div className="section-center-header">
           <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', marginBottom: '0.75rem' }}>
             Real Impact for Everyday People
           </span>
@@ -57,7 +58,7 @@ export const StatsImpact = () => {
           }}>
             Bringing Better Healthcare Closer to Your Home
           </h2>
-          <p style={{ fontSize: '0.975rem', color: '#cbd5e1' }}>
+          <p style={{ fontSize: '0.975rem', color: '#cbd5e1', maxWidth: '650px', margin: '0 auto' }}>
             Ensuring every family receives uninterrupted medical care and instant hospital access when they need it most.
           </p>
         </div>

@@ -48,17 +48,17 @@ export const DoctorHeader = ({ doctor, patients = [], activePatient, onSelectPat
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
               <span><strong>Specialization:</strong> {doctor.specialization}</span>
               <span>•</span>
-              <span style={{ fontFamily: 'monospace', color: 'var(--primary-navy)', fontWeight: 600 }}>UID: {doctor.uid}</span>
+              <span style={{ fontFamily: 'monospace', color: 'var(--primary-navy)', fontWeight: 600 }}>Doctor ID: {doctor.uid}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-subtle)', marginTop: '0.35rem' }}>
               <Building2 size={14} color="var(--primary-navy)" />
-              <span><strong>Duty Station:</strong> {doctor.currentPlaceOfPractice}</span>
+              <span><strong>Hospital / Clinic:</strong> {doctor.currentPlaceOfPractice}</span>
             </div>
           </div>
         </div>
 
-        {/* PATIENT SELECTOR FOR CLINICAL ENCOUNTER */}
+        {/* PATIENT SELECTOR */}
         <div style={{
           background: '#ffffff',
           border: '1px solid var(--border-medium)',
@@ -102,15 +102,15 @@ export const DoctorHeader = ({ doctor, patients = [], activePatient, onSelectPat
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Users size={16} color="var(--primary-navy)" />
-          <span>Today's OPD Queue: <strong>{doctor.consultationSlotsToday || 24} patients</strong></span>
+          <span>Today's Clinic Queue: <strong>{doctor.consultationSlotsToday || 24} patients</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <GitPullRequest size={16} color="var(--medical-teal)" />
-          <span>Active Inter-Tier Referrals: <strong>{doctor.activeReferralsCount || 8} cases</strong></span>
+          <span>Active Hospital Referrals: <strong>{doctor.activeReferralsCount || 8} cases</strong></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Database size={16} color="var(--success-green)" />
-          <span>Local Cache: <strong style={{ color: 'var(--success-green)' }}>IndexedDB Verified</strong></span>
+          <span>Device Storage: <strong style={{ color: 'var(--success-green)' }}>Saved Offline & Ready</strong></span>
         </div>
       </div>
     </div>
