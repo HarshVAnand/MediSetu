@@ -11,7 +11,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
     new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
   );
   const [reason, setReason] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
   const targetFacility = INITIAL_FACILITIES.find(f => f.id === toFacilityId) || INITIAL_FACILITIES[0];
@@ -20,11 +20,12 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
     e.preventDefault();
     if (!reason || !patient) return;
 
-    setIsSaving(true);
+    setIsSubmitting(true);
     setSuccessMsg('');
 
     try {
       const referralId = 'ref-' + Date.now();
+      const tokenNum = 'REF-' + Math.floor(1000 + Math.random() * 9000);
       const newReferral = {
         id: referralId,
         patientId: patient.id,
@@ -39,7 +40,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
         status: 'Accepted',
         reasonForReferral: reason,
         appointmentDate,
-        tokenNumber: 'REF-' + Math.floor(1000 + Math.random() * 9000),
+        tokenNumber: tokenNum,
         createdAt: new Date().toISOString()
       };
 
@@ -47,11 +48,11 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
       await enqueueSyncAction('CREATE_REFERRAL', { referralId, patientId: patient.id });
 
       setIsSubmitting(false);
-      setSuccessMsg(`Referral Token #${tokenNum} issued. Health summary sent to ${targetFac.name}.`);
+      setSuccessMsg(`Referral Token #${tokenNum} issued. Health summary sent to ${targetFacility.name}.`);
       onReferralCreated && onReferralCreated(newReferral);
     } catch (err) {
       console.error(err);
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -101,7 +102,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
               onChange={(e) => setToFacilityId(e.target.value)}
               required
             >
-              {targetFacilities.map(f => (
+              {INITIAL_FACILITIES.map(f => (
                 <option key={f.id} value={f.id}>
                   {f.category === 'Government' ? '🏛️' : '🏥'} {f.name} ({f.facilityType})
                 </option>
@@ -126,83 +127,29 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
               <option value="Paediatrics & Neonatal Care">Paediatrics & Neonatal Care</option>
             </select>
           </div>
-
         </div>
 
-        {/* TRIAGE URGENCY LEVEL */}
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label className="form-label">Referral Urgency Level *</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-            
-            <label style={{
-              background: urgency === 'Normal' ? 'var(--accent-cyan-subtle)' : 'var(--bg-page)',
-              border: `2px solid ${urgency === 'Normal' ? 'var(--accent-cyan)' : 'var(--border-medium)'}`,
-              borderRadius: 'var(--radius-md)',
-              padding: '0.65rem 0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <input 
-                type="radio" 
-                name="urgency" 
-                value="Normal" 
-                checked={urgency === 'Normal'}
-                onChange={() => setUrgency('Normal')}
-              />
-              <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--primary-navy-dark)' }}>Routine</strong>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>Within 14 days</div>
+        {/* FACILITY INFO BOX */}
+        {targetFacility && (
+          <div style={{
+            background: 'var(--bg-page)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.85rem 1rem',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.8125rem'
+          }}>
+            <div>
+              <div style={{ fontWeight: 700, color: 'var(--primary-navy-dark)' }}>
+                {targetFacility.category === 'Government' ? '🏛️ Government Hospital' : '🏥 Private Hospital'} • {targetFacility.facilityType}
               </div>
-            </label>
-
-            <label style={{
-              background: urgency === 'Priority' ? 'var(--warning-bg)' : 'var(--bg-page)',
-              border: `2px solid ${urgency === 'Priority' ? 'var(--warning-amber)' : 'var(--border-medium)'}`,
-              borderRadius: 'var(--radius-md)',
-              padding: '0.65rem 0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <input 
-                type="radio" 
-                name="urgency" 
-                value="Priority" 
-                checked={urgency === 'Priority'}
-                onChange={() => setUrgency('Priority')}
-              />
-              <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--warning-amber)' }}>Priority</strong>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>Within 3-7 days</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.2rem' }}>
+                📍 {targetFacility.address}
               </div>
-            </label>
-
-            <label style={{
-              background: urgency === 'Emergency' ? 'var(--urgent-bg)' : 'var(--bg-page)',
-              border: `2px solid ${urgency === 'Emergency' ? 'var(--urgent-red)' : 'var(--border-medium)'}`,
-              borderRadius: 'var(--radius-md)',
-              padding: '0.65rem 0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <input 
-                type="radio" 
-                name="urgency" 
-                value="Emergency" 
-                checked={urgency === 'Emergency'}
-                onChange={() => setUrgency('Emergency')}
-              />
-              <div>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--urgent-red)' }}>Emergency</strong>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>Immediate 108 Ambulance</div>
-              </div>
-            </label>
-
+            </div>
             <div style={{ textAlign: 'right' }}>
               <div>Free Beds: <strong style={{ color: 'var(--success-green)' }}>{targetFacility.availableBeds}</strong></div>
               <div>ICU Beds Free: <strong>{targetFacility.availableIcuBeds || 0}</strong></div>
@@ -256,8 +203,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
               value={appointmentDate}
               onChange={(e) => setAppointmentDate(e.target.value)}
               required
-            >
-            </input>
+            />
           </div>
 
         </div>
@@ -295,7 +241,7 @@ export const IssueReferral = ({ doctor, patient, onReferralCreated }) => {
         {/* SUBMIT BUTTON */}
         <button 
           type="submit" 
-          disabled={isSaving}
+          disabled={isSubmitting}
           className="btn btn-teal btn-lg"
           style={{ width: '100%' }}
         >
