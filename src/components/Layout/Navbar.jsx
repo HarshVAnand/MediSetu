@@ -78,7 +78,7 @@ export const Navbar = ({
               </span>
             </div>
             <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', fontWeight: 500, lineHeight: 1 }}>
-              Easy Healthcare & 60km Hospital Finder
+              Easy Healthcare & Hospital Finder
             </div>
           </div>
         </div>
@@ -102,7 +102,7 @@ export const Navbar = ({
                 fontWeight: 700
               }}
             >
-              📍 Find Hospitals (60km)
+              📍 Find Hospitals
             </button>
             <button 
               onClick={() => handleNavClick('how-it-works')} 
@@ -163,7 +163,7 @@ export const Navbar = ({
                 style={{ fontSize: '0.825rem' }}
               >
                 <Stethoscope size={15} />
-                <span>Doctor Login</span>
+                <span>Specialist Login</span>
               </button>
 
               <button 
