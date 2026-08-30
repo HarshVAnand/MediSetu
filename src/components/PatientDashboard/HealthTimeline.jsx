@@ -9,11 +9,9 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Filter, 
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
-  FlaskConical,
-  Heart
+  ChevronDown, 
+  ChevronUp, 
+  Heart 
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -30,7 +28,7 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
       facilityName: r.facilityName,
       facilityTier: r.facilityTier,
       type: r.type,
-      category: r.type.includes('Lab') ? 'LAB' : r.facilityTier.includes('Sub') ? 'SUBCENTRE' : r.facilityTier.includes('District') ? 'DISTRICT' : 'PHC',
+      category: r.type.includes('Lab') ? 'LAB' : r.facilityTier?.includes('Sub') ? 'SUBCENTRE' : r.facilityTier?.includes('District') ? 'DISTRICT' : 'PHC',
       provider: r.provider,
       summary: r.summary,
       details: r,
@@ -67,19 +65,19 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
       gsap.from('.timeline-item-anim', {
         opacity: 0,
         y: 20,
-        stagger: 0.1,
-        duration: 0.5,
+        stagger: 0.08,
+        duration: 0.45,
         ease: 'power2.out'
       });
     }
   }, [filterType, records, prescriptions]);
 
   const getTierBadge = (tier) => {
-    if (tier?.includes('Sub')) return <span className="badge badge-success">Village Sub-Centre</span>;
-    if (tier?.includes('PHC')) return <span className="badge badge-teal">PHC Consultation</span>;
-    if (tier?.includes('CHC')) return <span className="badge badge-info">CHC Community Care</span>;
-    if (tier?.includes('District')) return <span className="badge badge-neutral" style={{ background: '#312e81', color: '#fff' }}>District Specialist</span>;
-    return <span className="badge badge-neutral">{tier || 'Clinical Encounter'}</span>;
+    if (tier?.includes('Sub')) return <span className="badge badge-success">Village Clinic</span>;
+    if (tier?.includes('PHC')) return <span className="badge badge-teal">Health Centre</span>;
+    if (tier?.includes('CHC')) return <span className="badge badge-info">Community Hospital</span>;
+    if (tier?.includes('District')) return <span className="badge badge-neutral" style={{ background: '#312e81', color: '#fff' }}>District Hospital</span>;
+    return <span className="badge badge-neutral">{tier || 'Doctor Visit'}</span>;
   };
 
   return (
@@ -110,10 +108,10 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
           {[
             { id: 'ALL', label: 'All Records' },
-            { id: 'SUBCENTRE', label: 'Sub-Centres' },
-            { id: 'PHC', label: 'PHCs' },
+            { id: 'SUBCENTRE', label: 'Village Clinics' },
+            { id: 'PHC', label: 'Health Centres' },
             { id: 'DISTRICT', label: 'District Hospitals' },
-            { id: 'LAB', label: 'Lab Reports' },
+            { id: 'LAB', label: 'Blood Tests' },
             { id: 'PRESCRIPTION', label: 'Prescriptions' }
           ].map(f => (
             <button
@@ -145,7 +143,7 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
       ) : (
         <div style={{ position: 'relative', paddingLeft: '1.5rem' }}>
           
-          {/* VERTICAL CONTINUITY LINE */}
+          {/* VERTICAL LINE */}
           <div style={{
             position: 'absolute',
             left: '6px',
@@ -156,7 +154,7 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
           }} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {filteredItems.map((item, idx) => {
+            {filteredItems.map((item) => {
               const isExpanded = expandedId === item.id;
 
               return (
@@ -209,7 +207,7 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                         {item.summary}
                       </p>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '0.2rem' }}>
-                        Attending Provider: <strong>{item.provider}</strong>
+                        Doctor / Health Worker: <strong>{item.provider}</strong>
                       </div>
                     </div>
 
@@ -229,10 +227,10 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                           <div>Blood Pressure: <strong style={{ color: 'var(--urgent-red)' }}>{item.details.vitals.bp}</strong></div>
                         )}
                         {item.details.vitals.randomBloodSugar && (
-                          <div>Blood Glucose: <strong style={{ color: '#d97706' }}>{item.details.vitals.randomBloodSugar}</strong></div>
+                          <div>Blood Sugar: <strong style={{ color: '#d97706' }}>{item.details.vitals.randomBloodSugar}</strong></div>
                         )}
                         {item.details.vitals.spo2 && (
-                          <div>SpO2: <strong style={{ color: 'var(--success-green)' }}>{item.details.vitals.spo2}</strong></div>
+                          <div>Oxygen (SpO2): <strong style={{ color: 'var(--success-green)' }}>{item.details.vitals.spo2}</strong></div>
                         )}
                         {item.details.vitals.pulse && (
                           <div>Pulse: <strong>{item.details.vitals.pulse}</strong></div>
@@ -248,26 +246,24 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                         overflow: 'hidden',
                         marginBottom: '0.75rem'
                       }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
-                          <thead style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)' }}>
+                        <table style={{ width: '100%', fontSize: '0.8125rem', borderCollapse: 'collapse' }}>
+                          <thead style={{ background: 'var(--bg-subtle)', textAlign: 'left' }}>
                             <tr>
-                              <th style={{ padding: '0.45rem 0.75rem' }}>Test Parameter</th>
-                              <th style={{ padding: '0.45rem 0.75rem' }}>Observed Value</th>
-                              <th style={{ padding: '0.45rem 0.75rem' }}>Reference Range</th>
-                              <th style={{ padding: '0.45rem 0.75rem' }}>Status</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Test Name</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Your Value</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Normal Range</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Status</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {item.details.labResults.map((r, ridx) => (
-                              <tr key={ridx} style={{ borderTop: '1px solid var(--border-light)' }}>
-                                <td style={{ padding: '0.45rem 0.75rem', fontWeight: 600 }}>{r.test}</td>
-                                <td style={{ padding: '0.45rem 0.75rem', fontWeight: 700, color: r.flag === 'High' ? 'var(--urgent-red)' : 'inherit' }}>
-                                  {r.value}
-                                </td>
-                                <td style={{ padding: '0.45rem 0.75rem', color: 'var(--text-subtle)' }}>{r.normalRange}</td>
-                                <td style={{ padding: '0.45rem 0.75rem' }}>
-                                  <span className={`badge ${r.flag === 'High' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '0.65rem' }}>
-                                    {r.flag}
+                            {item.details.labResults.map((lr, lidx) => (
+                              <tr key={lidx} style={{ borderTop: '1px solid var(--border-light)' }}>
+                                <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>{lr.test}</td>
+                                <td style={{ padding: '0.5rem 0.75rem', fontWeight: 700 }}>{lr.value}</td>
+                                <td style={{ padding: '0.5rem 0.75rem', color: 'var(--text-subtle)' }}>{lr.refRange}</td>
+                                <td style={{ padding: '0.5rem 0.75rem' }}>
+                                  <span className={`badge ${lr.status === 'High' ? 'badge-warning' : lr.status === 'Normal' ? 'badge-success' : 'badge-neutral'}`}>
+                                    {lr.status}
                                   </span>
                                 </td>
                               </tr>
@@ -277,23 +273,32 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                       </div>
                     )}
 
-                    {/* PRESCRIPTION DRUGS LIST (IF PRESCRIPTION RECORD) */}
-                    {item.isPrescription && item.details.drugs && (
-                      <div style={{
-                        background: 'var(--accent-cyan-subtle)',
-                        border: '1px solid var(--accent-cyan-border)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '0.75rem',
-                        marginBottom: '0.75rem'
-                      }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-                          Prescribed Medication Regimen ({item.details.drugs.length} Medicines):
+                    {/* DRUGS LIST (IF PRESCRIPTION RECORD) */}
+                    {item.details.drugs && item.details.drugs.length > 0 && (
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.35rem' }}>
+                          Prescribed Medicines:
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                           {item.details.drugs.map((d, didx) => (
-                            <div key={didx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-                              <span>• <strong>{d.name}</strong> ({d.dosage})</span>
-                              <span style={{ color: 'var(--text-muted)' }}>{d.timing} ({d.duration})</span>
+                            <div key={didx} style={{
+                              background: 'var(--bg-page)',
+                              padding: '0.5rem 0.75rem',
+                              borderRadius: 'var(--radius-sm)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '0.8125rem'
+                            }}>
+                              <div>
+                                <strong>{d.name}</strong> ({d.dosage})
+                                <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>
+                                  {d.timing} • {d.instructions}
+                                </div>
+                              </div>
+                              <span className="badge badge-info" style={{ fontSize: '0.6875rem' }}>
+                                {d.duration || '30 days'}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -348,11 +353,11 @@ export const HealthTimeline = ({ patient, records = [], prescriptions = [] }) =>
                     )}
 
                   </div>
-
                 </div>
               );
             })}
           </div>
+
         </div>
       )}
 

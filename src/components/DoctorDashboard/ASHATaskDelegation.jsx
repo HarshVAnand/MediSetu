@@ -1,48 +1,53 @@
 import React, { useState } from 'react';
-import { HeartHandshake, User, Plus, Calendar, CheckCircle2, Phone, Clock, AlertCircle } from 'lucide-react';
+import { HeartHandshake, CheckCircle2, Calendar, User, Clock, Plus, Save } from 'lucide-react';
 import { dbPut, enqueueSyncAction } from '../../services/db.js';
 
 export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCreated }) => {
-  const [taskType, setTaskType] = useState('Blood Pressure & Blood Glucose Check');
-  const [frequency, setFrequency] = useState('Every 7 Days');
-  const [dueDate, setDueDate] = useState(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
-  const [instructions, setInstructions] = useState('');
+  const [taskType, setTaskType] = useState('Weekly Blood Pressure & Sugar Tracking');
+  const [assignedWorker, setAssignedWorker] = useState(patient?.assignedAsha || 'Smt. Kavitha M. (ASHA Worker)');
+  const [frequency, setFrequency] = useState('Every 7 days');
+  const [dueDate, setDueDate] = useState(
+    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  );
+  const [instructions, setInstructions] = useState('Check blood pressure with digital cuff. Verify patient is taking morning Metformin regularly.');
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const patientFollowups = followups.filter(f => f.patientId === patient?.id);
+  const commonTasks = [
+    { title: 'Weekly Blood Pressure & Sugar Tracking', desc: 'Visit home, check BP & random sugar, log reading.' },
+    { title: 'Pill Count & Medicine Refill Verification', desc: 'Confirm patient has sufficient morning and night tablets.' },
+    { title: 'Diet & Salt Restriction Education', desc: 'Counsel family on low-salt and low-sugar diet.' },
+    { title: 'Hospital Referral Escort & Reminders', desc: 'Remind patient of upcoming district hospital visit date.' }
+  ];
 
-  const handleCreateTask = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!instructions || !patient) return;
+    if (!taskType || !patient) return;
 
     setIsSaving(true);
     setSuccessMsg('');
 
     try {
       const fuId = 'fu-' + Date.now();
-      const newTask = {
+      const newFollowup = {
         id: fuId,
         patientId: patient.id,
         patientName: patient.name,
-        patientAddress: patient.address,
-        assignedWorker: patient.assignedAsha || 'Smt. Kavitha M. (ASHA Worker)',
-        workerContact: '+91 98455 12099',
+        assignedWorker,
         taskType,
         frequency,
         dueDate,
-        status: 'Pending',
         instructions,
-        createdDate: new Date().toISOString().split('T')[0]
+        status: 'Assigned',
+        createdAt: new Date().toISOString()
       };
 
-      await dbPut('followups', newTask);
-      await enqueueSyncAction('CREATE_ASHA_TASK', { fuId, patientId: patient.id });
+      await dbPut('followups', newFollowup);
+      await enqueueSyncAction('CREATE_FOLLOWUP_TASK', { fuId, patientId: patient.id });
 
       setIsSaving(false);
-      setInstructions('');
-      setSuccessMsg(`Follow-up task dispatched to ${patient.assignedAsha || 'ASHA worker'}.`);
-      onTaskCreated && onTaskCreated(newTask);
+      setSuccessMsg(`Task assigned to ${assignedWorker}. Scheduled for ${dueDate}.`);
+      onTaskCreated && onTaskCreated(newFollowup);
     } catch (err) {
       console.error(err);
       setIsSaving(false);
@@ -52,7 +57,7 @@ export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCrea
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
-      {/* TASK DISPATCH FORM */}
+      {/* CREATE NEW TASK CARD */}
       <div className="med-card" style={{ padding: '1.75rem' }}>
         <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
@@ -84,39 +89,98 @@ export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCrea
           </div>
         )}
 
-        <form onSubmit={handleCreateTask}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label className="form-label">Task Objective *</label>
-              <select 
-                className="form-select"
+        {/* QUICK TASK TEMPLATES */}
+        <div style={{
+          background: 'var(--bg-page)',
+          border: '1px solid var(--border-medium)',
+          borderRadius: 'var(--radius-md)',
+          padding: '0.75rem 1rem',
+          marginBottom: '1.25rem'
+        }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+            Select Common Task:
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {commonTasks.map((ct, cidx) => (
+              <button
+                key={cidx}
+                type="button"
+                onClick={() => { setTaskType(ct.title); setInstructions(ct.desc); }}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid var(--border-medium)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-main)',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--medical-teal)'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border-medium)'}
+              >
+                + {ct.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Task Type / Care Focus *</label>
+              <input 
+                type="text"
+                className="form-input"
                 value={taskType}
                 onChange={(e) => setTaskType(e.target.value)}
-              >
-                <option value="Blood Pressure & Blood Glucose Check">Blood Pressure & Blood Glucose Check</option>
-                <option value="Antenatal High-Risk Home Visit">Antenatal High-Risk Home Visit</option>
-                <option value="Medication Adherence & Pill Count">Medication Adherence & Pill Count</option>
-                <option value="District Hospital Referral Briefing & Token Handover">District Hospital Referral Briefing & Token Handover</option>
-                <option value="Post-Operative Wound / Suture Inspection">Post-Operative Wound / Suture Inspection</option>
-              </select>
+                required
+              />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Frequency</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Assigned Village Health Worker (ASHA) *</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={assignedWorker}
+                onChange={(e) => setAssignedWorker(e.target.value)}
+                required
+              />
+            </div>
+
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Visit Frequency *</label>
               <select 
                 className="form-select"
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
               >
-                <option value="Every 7 Days">Every 7 Days</option>
-                <option value="Bi-weekly">Bi-weekly (Every 14 Days)</option>
-                <option value="Monthly">Monthly</option>
-                <option value="One-time Visit">One-time Visit</option>
+                <option value="Every 3 days">Every 3 days (High Alert)</option>
+                <option value="Every 7 days">Every 7 days (Weekly Routine)</option>
+                <option value="Every 14 days">Every 14 days (Fortnightly)</option>
+                <option value="Once monthly">Once monthly (Maintenance)</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Due Date *</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">First Home Visit Date *</label>
               <input 
                 type="date"
                 className="form-input"
@@ -125,78 +189,76 @@ export const ASHATaskDelegation = ({ doctor, patient, followups = [], onTaskCrea
                 required
               />
             </div>
+
           </div>
 
           <div className="form-group">
-            <label className="form-label">Specific Clinical Instructions for Village ASHA Worker *</label>
+            <label className="form-label">Instructions for Health Worker</label>
             <textarea 
               className="form-textarea"
-              placeholder="e.g. Check sitting BP twice after 5 min rest. Verify if morning Metformin & Telmisartan are being taken regularly without missing doses."
+              rows="2"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              rows={2}
               required
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-page)', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '1.25rem', fontSize: '0.8125rem' }}>
-            <span>Assigned Worker: <strong>{patient?.assignedAsha || 'Smt. Kavitha M. (ASHA Worker)'}</strong></span>
-            <span style={{ color: 'var(--medical-teal-dark)' }}>Village: <strong>{patient?.address || 'Vokkaleri'}</strong></span>
-          </div>
-
           <button 
-            type="submit"
+            type="submit" 
             disabled={isSaving}
             className="btn btn-teal btn-lg"
             style={{ width: '100%' }}
           >
-            <Plus size={18} />
-            <span>{isSaving ? 'Dispatching Task...' : 'Dispatch Follow-up Task to ASHA'}</span>
+            <Save size={18} />
+            <span>{isSaving ? 'Assigning...' : 'Assign Home Task to Health Worker'}</span>
           </button>
+
         </form>
       </div>
 
-      {/* ACTIVE TASKS LIST */}
+      {/* EXISTING FOLLOW-UPS LIST */}
       <div className="med-card">
         <h4 style={{ fontSize: '1.1rem', color: 'var(--primary-navy-dark)', marginBottom: '1rem' }}>
-          Current Community Tasks for {patient?.name} ({patientFollowups.length})
+          Active Home Tasks for {patient?.name} ({followups.length})
         </h4>
 
-        {patientFollowups.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-subtle)' }}>
-            No community follow-up tasks currently assigned.
+        {followups.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--text-subtle)', fontSize: '0.875rem' }}>
+            No active follow-up tasks currently assigned for this patient.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-            {patientFollowups.map(fu => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {followups.map(fu => (
               <div 
                 key={fu.id}
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid var(--border-medium)',
+                  background: 'var(--bg-page)',
+                  border: '1px solid var(--border-light)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '1.15rem'
+                  padding: '1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <span className={`badge ${fu.status === 'Completed' ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '0.65rem' }}>
-                    {fu.status}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
-                    Due: <strong>{fu.dueDate}</strong>
-                  </span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-navy-dark)' }}>
+                    {fu.taskType}
+                  </div>
+                  <div style={{ fontSize: '0.78125rem', color: 'var(--text-muted)' }}>
+                    Assigned to: <strong>{fu.assignedWorker}</strong> • {fu.frequency}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '0.2rem' }}>
+                    Notes: "{fu.instructions}"
+                  </div>
                 </div>
 
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--primary-navy-dark)', marginBottom: '0.25rem' }}>
-                  {fu.taskType}
-                </div>
-
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
-                  {fu.instructions}
-                </p>
-
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
-                  Assigned: {fu.assignedWorker} ({fu.frequency})
+                <div style={{ textAlign: 'right' }}>
+                  <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
+                    Due: {fu.dueDate}
+                  </span>
                 </div>
               </div>
             ))}

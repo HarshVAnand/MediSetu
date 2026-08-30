@@ -2,6 +2,13 @@ import React from 'react';
 import { Activity, ShieldCheck, Heart, MapPin, Phone, Mail } from 'lucide-react';
 
 export const Footer = ({ onNavigate }) => {
+  const handleLinkClick = (e, sectionId) => {
+    e.preventDefault();
+    if (onNavigate) {
+      onNavigate(sectionId);
+    }
+  };
+
   return (
     <footer style={{
       backgroundColor: 'var(--primary-navy-dark)',
@@ -29,7 +36,8 @@ export const Footer = ({ onNavigate }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff'
+                color: '#fff',
+                flexShrink: 0
               }}>
                 <Activity size={20} />
               </div>
@@ -54,11 +62,11 @@ export const Footer = ({ onNavigate }) => {
               Quick Navigation
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <a href="#facilities" style={{ color: '#cbd5e1' }}>📍 Find Nearby Hospitals (60km)</a>
-              <a href="#how-it-works" style={{ color: '#cbd5e1' }}>How It Works (4 Steps)</a>
-              <a href="#for-patients" style={{ color: '#cbd5e1' }}>For Patients & Families</a>
-              <a href="#for-doctors" style={{ color: '#cbd5e1' }}>For Doctors & Health Workers</a>
-              <a href="#services" style={{ color: '#cbd5e1' }}>Everyday Features</a>
+              <a href="#facilities" onClick={(e) => handleLinkClick(e, 'facilities')} style={{ color: '#cbd5e1' }}>📍 Find Nearby Hospitals (60km)</a>
+              <a href="#how-it-works" onClick={(e) => handleLinkClick(e, 'how-it-works')} style={{ color: '#cbd5e1' }}>How It Works (4 Steps)</a>
+              <a href="#for-patients" onClick={(e) => handleLinkClick(e, 'for-patients')} style={{ color: '#cbd5e1' }}>For Patients & Families</a>
+              <a href="#for-doctors" onClick={(e) => handleLinkClick(e, 'for-doctors')} style={{ color: '#cbd5e1' }}>For Doctors & Health Workers</a>
+              <a href="#services" onClick={(e) => handleLinkClick(e, 'services')} style={{ color: '#cbd5e1' }}>Everyday Features</a>
             </div>
           </div>
 
@@ -111,7 +119,7 @@ export const Footer = ({ onNavigate }) => {
             © {new Date().getFullYear()} MediSetu Health. Dedicated to making healthcare accessible and simple.
           </div>
           <div>
-            Offline-first • Privacy protected • Built for rural & town families
+            Works Offline • Privacy Protected • Built for Rural & Town Families
           </div>
         </div>
 

@@ -28,7 +28,7 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <ShieldCheck size={20} color="var(--medical-teal)" />
               <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--medical-teal-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                100% Private, Safe & Government Approved
+                100% Private, Safe & Government Standard Approved
               </span>
             </div>
 
@@ -37,10 +37,10 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
             </h2>
 
             <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-              MediSetu adheres strictly to national health safety standards (ABDM). Your medical records stay securely stored on your own device, and only the doctors you choose are allowed to view your file.
+              MediSetu follows strict national digital health safety standards. Your medical records stay securely stored on your own device, and only the doctors you choose are allowed to view your file.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
                 <CheckCircle2 size={16} color="var(--success-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>Bank-grade privacy protection</span>
@@ -117,6 +117,7 @@ export const TrustSecurity = ({ onOpenAuthModal }) => {
         @media (max-width: 900px) {
           .trust-card-grid {
             grid-template-columns: 1fr !important;
+            padding: 1.75rem !important;
           }
         }
       `}</style>

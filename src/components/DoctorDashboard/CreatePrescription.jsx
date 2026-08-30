@@ -7,10 +7,10 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
   const [notes, setNotes] = useState('');
   const [drugs, setDrugs] = useState([
     {
-      name: 'Metformin Hydrochloride (SR)',
+      name: 'Metformin',
       dosage: '500 mg',
       schedule: { morning: true, afternoon: false, night: true },
-      timing: 'After meals',
+      timing: 'After food',
       duration: '30 days',
       instructions: 'Take with warm water after food'
     }
@@ -19,13 +19,12 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
   const [successMsg, setSuccessMsg] = useState('');
 
   const quickDrugList = [
-    { name: 'Metformin Hydrochloride', dosage: '500 mg', timing: 'After meals', defaultM: true, defaultN: true },
-    { name: 'Telmisartan Tablets IP', dosage: '40 mg', timing: 'Before breakfast', defaultM: true, defaultN: false },
-    { name: 'Amlodipine Besylate', dosage: '5 mg', timing: 'Morning', defaultM: true, defaultN: false },
-    { name: 'Atorvastatin Tablets IP', dosage: '10 mg', timing: 'Bedtime', defaultM: false, defaultN: true },
-    { name: 'Labetalol Tablets IP', dosage: '100 mg', timing: 'After meals', defaultM: true, defaultN: true },
-    { name: 'Paracetamol IP', dosage: '650 mg', timing: 'SOS / Post food', defaultM: false, defaultN: false },
-    { name: 'Ferrous Ascorbate + Folic Acid', dosage: '100mg/1.5mg', timing: 'Post lunch', defaultM: false, defaultN: false }
+    { name: 'Metformin', dosage: '500 mg', timing: 'After food', defaultM: true, defaultN: true },
+    { name: 'Telmisartan', dosage: '40 mg', timing: 'Before breakfast', defaultM: true, defaultN: false },
+    { name: 'Amlodipine', dosage: '5 mg', timing: 'Morning', defaultM: true, defaultN: false },
+    { name: 'Atorvastatin', dosage: '10 mg', timing: 'Bedtime', defaultM: false, defaultN: true },
+    { name: 'Paracetamol', dosage: '650 mg', timing: 'After food (for fever/pain)', defaultM: false, defaultN: false },
+    { name: 'Iron & Folic Acid Tablet', dosage: '100mg', timing: 'After lunch', defaultM: false, defaultN: false }
   ];
 
   const handleAddDrug = (preset = null) => {
@@ -90,8 +89,8 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
         patientId: patient.id,
         doctorId: doctor?.id || 'doc-001',
         doctorName: doctor?.name || 'Dr. Ramesh Kumar, MBBS',
-        facilityName: doctor?.currentPlaceOfPractice || 'Kolar Sub-Divisional PHC',
-        facilityTier: doctor?.currentPlaceOfPractice?.includes('District') ? 'District Hospital' : 'PHC',
+        facilityName: doctor?.currentPlaceOfPractice || 'Kolar Sub-Divisional Health Centre',
+        facilityTier: doctor?.currentPlaceOfPractice?.includes('District') ? 'District Hospital' : 'Health Centre',
         date: new Date().toISOString().split('T')[0],
         diagnosis,
         notes,
@@ -107,7 +106,7 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
       await enqueueSyncAction('CREATE_PRESCRIPTION', { presId, patientId: patient.id });
 
       setIsSaving(false);
-      setSuccessMsg(`E-Prescription successfully saved to ${patient.name}'s longitudinal health timeline.`);
+      setSuccessMsg(`Prescription saved to ${patient.name}'s health history and synced with their phone.`);
       onPrescriptionCreated && onPrescriptionCreated(newPres);
     } catch (err) {
       console.error(err);
@@ -121,12 +120,12 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
       {/* HEADER */}
       <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-          <span className="badge badge-teal">E-Prescription Builder</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Connected to Patient ABHA & Village ASHA</span>
+          <span className="badge badge-teal">Prescription Maker</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Direct Sync with Patient Phone</span>
         </div>
         <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <Pill size={20} color="var(--medical-teal)" />
-          <span>Issue Digital Prescription — {patient?.name}</span>
+          <span>Write Prescription for {patient?.name}</span>
         </h3>
       </div>
 
@@ -158,7 +157,7 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
         marginBottom: '1.25rem'
       }}>
         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-          + Fast Add Essential Medicine (NLEM Rural Formulations):
+          + Quick Add Common Medicines:
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
           {quickDrugList.map((q, qidx) => (
@@ -190,11 +189,11 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
         
         {/* DIAGNOSIS */}
         <div className="form-group">
-          <label className="form-label">Clinical Diagnosis / ICD-10 Impression *</label>
+          <label className="form-label">Health Condition / Diagnosis *</label>
           <input 
             type="text"
             className="form-input"
-            placeholder="e.g. Type-2 Diabetes Mellitus with Stage-II Essential Hypertension"
+            placeholder="e.g. Type-2 Diabetes and Blood Pressure Checkup"
             value={diagnosis}
             onChange={(e) => setDiagnosis(e.target.value)}
             required
@@ -204,14 +203,14 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
         {/* PRESCRIBED DRUGS LIST */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <label className="form-label" style={{ margin: 0 }}>Medications List ({drugs.length})</label>
+            <label className="form-label" style={{ margin: 0 }}>Medicines ({drugs.length})</label>
             <button 
               type="button" 
               onClick={() => handleAddDrug()}
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
             >
-              <Plus size={14} /> Add Custom Drug
+              <Plus size={14} /> Add Medicine
             </button>
           </div>
 
@@ -234,7 +233,7 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
                   <input 
                     type="text"
                     className="form-input"
-                    placeholder="Medicine Name (e.g. Metformin)"
+                    placeholder="Medicine Name"
                     value={drug.name}
                     onChange={(e) => handleUpdateDrug(idx, 'name', e.target.value)}
                     style={{ fontSize: '0.8125rem', padding: '0.45rem 0.65rem' }}
@@ -246,7 +245,7 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
                   <input 
                     type="text"
                     className="form-input"
-                    placeholder="Dosage (500mg)"
+                    placeholder="Dose (500mg)"
                     value={drug.dosage}
                     onChange={(e) => handleUpdateDrug(idx, 'dosage', e.target.value)}
                     style={{ fontSize: '0.8125rem', padding: '0.45rem 0.65rem' }}
@@ -254,47 +253,85 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
                   />
                 </div>
 
-                {/* SCHEDULE CHECKBOXES (M-A-N) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', fontWeight: 700 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={drug.schedule?.morning} 
-                      onChange={() => handleToggleSchedule(idx, 'morning')}
-                    /> M
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={drug.schedule?.afternoon} 
-                      onChange={() => handleToggleSchedule(idx, 'afternoon')}
-                    /> A
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={drug.schedule?.night} 
-                      onChange={() => handleToggleSchedule(idx, 'night')}
-                    /> N
-                  </label>
+                {/* SCHEDULE CHECKBOXES: MORNING - AFTERNOON - NIGHT */}
+                <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-page)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSchedule(idx, 'morning')}
+                    style={{
+                      flex: 1,
+                      padding: '0.3rem 0.2rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      borderRadius: '3px',
+                      background: drug.schedule.morning ? 'var(--medical-teal)' : 'transparent',
+                      color: drug.schedule.morning ? '#ffffff' : 'var(--text-subtle)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Morn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSchedule(idx, 'afternoon')}
+                    style={{
+                      flex: 1,
+                      padding: '0.3rem 0.2rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      borderRadius: '3px',
+                      background: drug.schedule.afternoon ? 'var(--accent-cyan)' : 'transparent',
+                      color: drug.schedule.afternoon ? '#ffffff' : 'var(--text-subtle)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Noon
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSchedule(idx, 'night')}
+                    style={{
+                      flex: 1,
+                      padding: '0.3rem 0.2rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      borderRadius: '3px',
+                      background: drug.schedule.night ? 'var(--primary-navy)' : 'transparent',
+                      color: drug.schedule.night ? '#ffffff' : 'var(--text-subtle)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Night
+                  </button>
                 </div>
 
                 <div>
                   <input 
                     type="text"
                     className="form-input"
-                    placeholder="Duration (30 days)"
+                    placeholder="Duration (e.g. 30 days)"
                     value={drug.duration}
                     onChange={(e) => handleUpdateDrug(idx, 'duration', e.target.value)}
                     style={{ fontSize: '0.8125rem', padding: '0.45rem 0.65rem' }}
                   />
                 </div>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => handleRemoveDrug(idx)}
-                  style={{ background: 'none', border: 'none', color: 'var(--urgent-red)', cursor: 'pointer', padding: '4px' }}
-                  title="Remove medication"
+                  disabled={drugs.length <= 1}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--urgent-red)',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    opacity: drugs.length <= 1 ? 0.3 : 1
+                  }}
+                  title="Remove medicine"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -303,38 +340,30 @@ export const CreatePrescription = ({ doctor, patient, onPrescriptionCreated }) =
           </div>
         </div>
 
-        {/* CLINICAL ADVICE & NOTES */}
+        {/* CLINICAL NOTES */}
         <div className="form-group">
-          <label className="form-label">Clinical Advice / Lifestyle & Diet Instructions</label>
+          <label className="form-label">Doctor Advice & Lifestyle Guidance</label>
           <textarea 
             className="form-textarea"
-            placeholder="e.g. Low salt diet, avoid fried food. ASHA worker to check BP every 7 days. Review in 4 weeks."
+            rows="2"
+            placeholder="e.g. Reduce salt and sugar. Walk for 30 minutes daily. Review in 4 weeks."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            rows={2}
           />
         </div>
 
-        {/* SUBMIT BUTTON */}
         <button 
-          type="submit"
+          type="submit" 
           disabled={isSaving}
           className="btn btn-teal btn-lg"
           style={{ width: '100%' }}
         >
           <Save size={18} />
-          <span>{isSaving ? 'Signing & Persisting E-Prescription...' : 'Sign & Issue E-Prescription'}</span>
+          <span>{isSaving ? 'Saving...' : 'Save Prescription & Sync with Patient'}</span>
         </button>
 
       </form>
 
-      <style>{`
-        @media (max-width: 768px) {
-          div[style*="gridTemplateColumns: 2fr 1fr 1.2fr 1fr auto"] {
-            gridTemplateColumns: 1fr 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

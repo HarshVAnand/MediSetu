@@ -42,15 +42,14 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Error querying IndexedDB.');
+      setErrorMsg('Error checking login.');
       setIsSubmitting(false);
     }
   };
 
   const handleSelectDemo = (doctor) => {
     setEmail(doctor.email);
-    setPassword(doctor.password || 'doctor123');
-    onLoginSuccess(doctor);
+    setPassword(doctor.password || "");
   };
 
   return (
@@ -60,9 +59,9 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
         {/* HEADER */}
         <div className="modal-header">
           <div>
-            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Healthcare Professional</span>
+            <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Doctor & Health Worker Portal</span>
             <h3 style={{ fontSize: '1.25rem', marginTop: '0.25rem', color: 'var(--primary-navy-dark)' }}>
-              Login as Doctor
+              Doctor Login
             </h3>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
@@ -80,7 +79,7 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--medical-teal-dark)', fontWeight: 700, fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
             <Sparkles size={14} />
-            <span>1-Click Demo Practitioner Quick Login:</span>
+            <span>1-Click Sample Doctor Login:</span>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -108,11 +107,13 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
                   <div style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--primary-navy-dark)' }}>
                     {d.name} ({d.qualifications})
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>
-                    {d.currentPlaceOfPractice} • UID: {d.uid}
+                  <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>
+                    {d.specialization} • {d.currentPlaceOfPractice}
                   </div>
                 </div>
-                <ArrowRight size={14} color="var(--medical-teal)" />
+                <span className="badge badge-teal" style={{ fontSize: '0.65rem' }}>
+                  Select
+                </span>
               </button>
             ))}
           </div>
@@ -120,33 +121,29 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
 
         {errorMsg && (
           <div style={{
-            backgroundColor: 'var(--urgent-bg)',
+            background: 'var(--urgent-bg)',
             border: '1px solid var(--urgent-border)',
             color: 'var(--urgent-red)',
-            padding: '0.65rem',
+            padding: '0.65rem 0.85rem',
             borderRadius: 'var(--radius-md)',
-            fontSize: '0.85rem',
+            fontSize: '0.8125rem',
             marginBottom: '1rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.4rem'
           }}>
-            <AlertCircle size={16} />
+            <AlertCircle size={15} />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* LOGIN FORM */}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Stethoscope size={15} />
-              <span>Registered Email</span>
-            </label>
+            <label className="form-label">Doctor Email / Login ID *</label>
             <input 
-              type="email" 
-              className="form-input" 
-              placeholder="e.g. dr.ramesh@medisetu.org" 
+              type="email"
+              className="form-input"
+              placeholder="e.g. dr.ramesh.kumar@medisetu.org"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -154,42 +151,38 @@ export const DoctorLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRe
           </div>
 
           <div className="form-group">
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Lock size={15} />
-              <span>Password</span>
-            </label>
+            <label className="form-label">Password *</label>
             <input 
-              type="password" 
-              className="form-input" 
-              placeholder="••••••••" 
+              type="password"
+              className="form-input"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
 
-          <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="btn btn-teal btn-lg" 
-              style={{ width: '100%' }}
-            >
-              {isSubmitting ? 'Authenticating Practitioner...' : 'Sign In as Doctor'}
-            </button>
-
-            <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-              New practitioner?{' '}
-              <button 
-                type="button" 
-                onClick={onSwitchToRegister} 
-                style={{ background: 'none', border: 'none', color: 'var(--primary-navy)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Register as Doctor
-              </button>
-            </div>
-          </div>
+          <button 
+            type="submit"
+            disabled={isSubmitting}
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', marginTop: '0.5rem' }}
+          >
+            <span>{isSubmitting ? 'Logging In...' : 'Open Doctor Portal'}</span>
+            <ArrowRight size={18} />
+          </button>
         </form>
+
+        <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Need to register your clinic or practice?{' '}
+          <button 
+            type="button"
+            onClick={onSwitchToRegister}
+            style={{ background: 'none', border: 'none', color: 'var(--medical-teal)', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Register here
+          </button>
+        </div>
 
       </div>
     </div>

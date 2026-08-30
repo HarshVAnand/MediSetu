@@ -60,9 +60,9 @@ import {
   Sparkles, 
   FileText, 
   UserCheck, 
-  HeartHandshake,
-  Stethoscope,
-  Building2
+  HeartHandshake, 
+  Stethoscope, 
+  Building2 
 } from 'lucide-react';
 
 export default function App() {
@@ -138,7 +138,7 @@ export default function App() {
   // Sync Queue Processor
   const handleSyncNow = async () => {
     if (!isOnline) {
-      showToast('warning', 'Network Offline', 'Cannot sync while offline mode is active.');
+      showToast('warning', 'Offline Mode', 'Cannot sync while offline mode is active.');
       return;
     }
 
@@ -152,7 +152,7 @@ export default function App() {
 
       await refreshAllData();
       setIsSyncing(false);
-      showToast('success', 'Sync Successful', 'All offline records saved successfully.');
+      showToast('success', 'Records Saved', 'All offline records saved and synced.');
     } catch (err) {
       console.error('Sync error:', err);
       setIsSyncing(false);
@@ -167,7 +167,11 @@ export default function App() {
     setActiveAuthModal(null);
     setActivePatientTab('timeline');
     showToast('success', 'Welcome Back', `Logged in as ${patient.name}.`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 0.8 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handlePatientRegisterSuccess = (newPatient) => {
@@ -176,7 +180,11 @@ export default function App() {
     setActiveAuthModal(null);
     refreshAllData();
     showToast('success', 'Health Profile Created', `Welcome ${newPatient.name}! Your free health record is ready.`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 0.8 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleDoctorLoginSuccess = (doctor) => {
@@ -184,8 +192,12 @@ export default function App() {
     setCurrentRole('doctor');
     setActiveAuthModal(null);
     setActiveDoctorTab('dossier');
-    showToast('success', 'Doctor Authenticated', `Welcome ${doctor.name}.`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('success', 'Doctor Logged In', `Welcome ${doctor.name}.`);
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 0.8 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleDoctorRegisterSuccess = (newDoctor) => {
@@ -194,7 +206,11 @@ export default function App() {
     setActiveAuthModal(null);
     refreshAllData();
     showToast('success', 'Doctor Account Created', `Welcome ${newDoctor.name}.`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 0.8 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleLogout = () => {
@@ -202,23 +218,39 @@ export default function App() {
     setCurrentUser(null);
     setActiveSection('hero');
     showToast('info', 'Logged Out', 'Switched to MediSetu public view.');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 0.8 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
-  // Smooth Section Navigation
+  // Smooth Section Navigation via Lenis
   const handleNavigate = (sectionId) => {
     setActiveSection(sectionId);
-    if (sectionId === 'landing') {
-      setCurrentRole('guest');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (sectionId === 'landing' || sectionId === 'hero') {
+      if (currentRole !== 'guest') setCurrentRole('guest');
+      if (window.lenis) {
+        window.lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
 
     const el = document.getElementById(sectionId);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      if (window.lenis) {
+        window.lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+      } else {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.lenis) {
+        window.lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -237,7 +269,7 @@ export default function App() {
         onToggleNetwork={() => {
           const next = !isOnline;
           setIsOnline(next);
-          showToast(next ? 'success' : 'warning', next ? 'Online Mode' : 'Offline Mode', next ? 'Connected to cloud sync.' : 'Saving locally on this device.');
+          showToast(next ? 'success' : 'warning', next ? 'Online Mode' : 'Offline Mode', next ? 'Connected to online cloud.' : 'Saving locally on this device.');
         }}
         pendingSyncCount={pendingSyncCount}
         onSyncNow={handleSyncNow}

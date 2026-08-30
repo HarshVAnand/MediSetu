@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  HeartHandshake, 
-  Activity, 
-  User, 
-  Stethoscope, 
-  LogOut, 
-  Menu, 
-  X, 
-  QrCode, 
-  MapPin, 
-  Shield, 
-  ChevronRight,
-  Sparkles
+import {
+  Activity,
+  User,
+  Stethoscope,
+  LogOut,
+  Menu,
+  X,
+  QrCode,
+  MapPin
 } from 'lucide-react';
 
 export const Navbar = ({ 
@@ -36,8 +32,9 @@ export const Navbar = ({
       position: 'sticky',
       top: 0,
       zIndex: 900,
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backgroundColor: 'rgba(255, 255, 255, 0.96)',
       backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
       borderBottom: '1px solid var(--border-light)',
       boxShadow: 'var(--shadow-sm)'
     }}>
@@ -58,7 +55,8 @@ export const Navbar = ({
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff',
-            boxShadow: '0 2px 10px rgba(15, 76, 129, 0.25)'
+            boxShadow: '0 2px 10px rgba(15, 76, 129, 0.25)',
+            flexShrink: 0
           }}>
             <Activity size={24} strokeWidth={2.5} />
           </div>
@@ -145,7 +143,7 @@ export const Navbar = ({
         )}
 
         {/* AUTH BUTTONS / USER PROFILE CONTROLS */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {currentRole === 'guest' ? (
             <div className="auth-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <button 
@@ -252,11 +250,11 @@ export const Navbar = ({
               border: 'none',
               cursor: 'pointer',
               color: 'var(--primary-navy)',
-              padding: '0.25rem'
+              padding: '0.35rem'
             }}
             aria-label="Toggle Navigation Menu"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
       </div>
@@ -278,7 +276,7 @@ export const Navbar = ({
             📍 Find Hospitals (60km Radius)
           </button>
           <button onClick={() => handleNavClick('how-it-works')} style={mobileNavLinkStyle}>How It Works</button>
-          <button onClick={() => handleNavClick('for-patients')} style={mobileNavLinkStyle}>For Patients</button>
+          <button onClick={() => handleNavClick('for-patients')} style={mobileNavLinkStyle}>For Patients & Families</button>
           <button onClick={() => handleNavClick('for-doctors')} style={mobileNavLinkStyle}>For Doctors & Health Workers</button>
           <button onClick={() => handleNavClick('services')} style={mobileNavLinkStyle}>Services</button>
           <button onClick={() => handleNavClick('about')} style={mobileNavLinkStyle}>About</button>
@@ -286,7 +284,7 @@ export const Navbar = ({
           <hr style={{ borderColor: 'var(--border-light)', margin: '0.5rem 0' }} />
 
           {currentRole === 'guest' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <button 
                 onClick={() => { onOpenAuthModal('patient-login'); setMobileMenuOpen(false); }}
                 className="btn btn-secondary"
@@ -306,7 +304,14 @@ export const Navbar = ({
                 className="btn btn-primary"
                 style={{ width: '100%', justifyContent: 'center' }}
               >
-                Get Started
+                Create Free Patient Account
+              </button>
+              <button
+                onClick={() => { onOpenAuthModal('doctor-register'); setMobileMenuOpen(false); }}
+                className="btn btn-teal"
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <Stethoscope size={16} /> Register as Doctor / Health Worker
               </button>
             </div>
           ) : (

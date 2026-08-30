@@ -29,7 +29,8 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
             borderRadius: 'var(--radius-lg)',
             overflow: 'hidden',
             border: '2px solid var(--medical-teal)',
-            boxShadow: 'var(--shadow-sm)'
+            boxShadow: 'var(--shadow-sm)',
+            flexShrink: 0
           }}>
             <img 
               src={patient.aadharPhoto || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80'} 

@@ -1,24 +1,21 @@
 import React, { useEffect, useRef } from 'react';
 import { 
-  Heart, 
   ArrowRight, 
-  ShieldCheck, 
   Sparkles, 
   MapPin, 
-  CheckCircle2, 
-  Stethoscope, 
+  WifiOff, 
+  Scan, 
+  ShieldCheck, 
+  PhoneCall, 
   Building2, 
   Users, 
-  Clock,
-  Scan,
-  PhoneCall,
-  WifiOff
+  Heart,
+  CheckCircle2
 } from 'lucide-react';
 import gsap from 'gsap';
 
 export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
   const heroRef = useRef(null);
-  const floatingCardsRef = useRef(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -31,9 +28,9 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
         ease: 'power3.out'
       });
 
-      // Floating micro-animation for the 3D-like feature badges
+      // Floating micro-animation for the badges
       gsap.to('.floating-badge-1', {
-        y: -10,
+        y: -8,
         duration: 2.2,
         repeat: -1,
         yoyo: true,
@@ -41,7 +38,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
       });
 
       gsap.to('.floating-badge-2', {
-        y: 10,
+        y: 8,
         duration: 2.6,
         repeat: -1,
         yoyo: true,
@@ -49,36 +46,28 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
         delay: 0.5
       });
 
-      gsap.to('.floating-badge-3', {
-        y: -8,
-        duration: 2.4,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-        delay: 1.0
-      });
-
-      // Pulse animation on the bridge connection nodes
+      // Pulse animation on the connection nodes
       gsap.to('.pulse-node', {
-        scale: 1.1,
+        scale: 1.08,
         duration: 1.4,
         repeat: -1,
         yoyo: true,
         ease: 'sine.inOut',
         stagger: 0.25
       });
-
-      // Flowing line animation
-      gsap.to('.flow-line', {
-        strokeDashoffset: -40,
-        duration: 2.2,
-        repeat: -1,
-        ease: 'linear'
-      });
     }, heroRef);
 
     return () => ctx.revert();
   }, []);
+
+  const handleFindHospitalsClick = () => {
+    if (window.lenis) {
+      const el = document.getElementById('facilities');
+      if (el) window.lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+    } else if (onExploreMap) {
+      onExploreMap();
+    }
+  };
 
   return (
     <section 
@@ -91,7 +80,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
         overflow: 'hidden'
       }}
     >
-      {/* Background glow accents */}
+      {/* Soft Background glow accents */}
       <div style={{
         position: 'absolute',
         top: '-15%',
@@ -123,7 +112,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
         }} className="hero-main-grid">
           
           {/* LEFT: VALUE PROPOSITION IN PLAIN LANGUAGE */}
-          <div>
+          <div className="hero-left-content">
             
             {/* Top Mission Pill */}
             <div className="hero-anim-item" style={{ marginBottom: '1.25rem' }}>
@@ -140,20 +129,20 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
                 fontWeight: 700
               }}>
                 <Sparkles size={14} color="var(--medical-teal)" />
-                <span>Simple Health Records & Nearby Hospital Finder</span>
+                <span>Simple Health Records & 60km Hospital Finder</span>
               </div>
             </div>
 
             {/* Main Headline */}
-            <h1 className="hero-anim-item" style={{
+            <h1 className="hero-anim-item hero-title" style={{
               fontSize: 'clamp(2.1rem, 4vw, 3.25rem)',
               fontWeight: 800,
               color: 'var(--primary-navy-dark)',
               letterSpacing: '-0.025em',
-              lineHeight: 1.15,
+              lineHeight: 1.18,
               marginBottom: '1.25rem'
             }}>
-              All your medical records in one place, <br />
+              All your health records in one place, <br />
               <span style={{ 
                 color: 'var(--medical-teal)', 
                 background: 'linear-gradient(90deg, #0d9488, #0284c7)', 
@@ -165,7 +154,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
             </h1>
 
             {/* Subtext in Daily Simple Words */}
-            <p className="hero-anim-item" style={{
+            <p className="hero-anim-item hero-desc" style={{
               fontSize: '1.0625rem',
               color: 'var(--text-muted)',
               lineHeight: 1.65,
@@ -176,7 +165,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
             </p>
 
             {/* CTA Buttons */}
-            <div className="hero-anim-item" style={{
+            <div className="hero-anim-item hero-cta-group" style={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: '1rem',
@@ -194,7 +183,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
 
               <button 
                 id="hero-btn-explore-60km-hospitals"
-                onClick={onExploreMap}
+                onClick={handleFindHospitalsClick}
                 className="btn btn-outline-teal btn-lg"
                 style={{ padding: '0.85rem 1.4rem', fontSize: '0.95rem' }}
               >
@@ -204,25 +193,25 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
             </div>
 
             {/* Value Highlights */}
-            <div className="hero-anim-item" style={{
+            <div className="hero-anim-item hero-value-props" style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
               gap: '1rem',
               paddingTop: '1.5rem',
               borderTop: '1px solid var(--border-light)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', flexShrink: 0 }}>
                   <WifiOff size={16} />
                 </div>
                 <div>
                   <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>Works Offline</div>
-                  <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>No cell signal needed</div>
+                  <div style={{ fontSize: '0.71875rem', color: 'var(--text-subtle)' }}>No internet needed</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', flexShrink: 0 }}>
                   <Scan size={16} />
                 </div>
                 <div>
@@ -232,7 +221,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
                   <ShieldCheck size={16} />
                 </div>
                 <div>
@@ -244,10 +233,10 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
 
           </div>
 
-          {/* RIGHT: INTERACTIVE HEALTHCARE BRIDGE VISUALIZATION */}
-          <div ref={floatingCardsRef} style={{ position: 'relative' }}>
+          {/* RIGHT: HEALTHCARE CONNECTION VISUALIZATION */}
+          <div style={{ position: 'relative' }} className="hero-right-visual">
             
-            {/* FLOATING STATUS PILL 1: 60km Hospital Radar */}
+            {/* FLOATING STATUS PILL 1: 60km Hospital Finder */}
             <div className="floating-badge-1" style={{
               position: 'absolute',
               top: '-18px',
@@ -266,10 +255,10 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
               color: 'var(--medical-teal-dark)'
             }}>
               <span style={{ width: '8px', height: '8px', background: '#14b8a6', borderRadius: '50%', display: 'inline-block' }}></span>
-              <span>📍 16+ Hospitals within 60km Circle</span>
+              <span>📍 16+ Hospitals within 60km</span>
             </div>
 
-            {/* FLOATING STATUS PILL 2: 24/7 Emergency Live */}
+            {/* FLOATING STATUS PILL 2: Live Emergency */}
             <div className="floating-badge-2" style={{
               position: 'absolute',
               bottom: '15px',
@@ -288,7 +277,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
               color: '#dc2626'
             }}>
               <span style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', display: 'inline-block' }}></span>
-              <span>🚨 Live ICU & Emergency Bed Tracker</span>
+              <span>🚨 Live ICU & Emergency Beds</span>
             </div>
 
             {/* MAIN VISUAL CARD */}
@@ -303,7 +292,7 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--primary-navy-dark)' }}>
-                  Continuous Care Journey
+                  Your Complete Health Journey
                 </div>
                 <span className="badge badge-teal" style={{ fontSize: '0.6875rem' }}>
                   Live Connected
@@ -334,7 +323,8 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    flexShrink: 0
                   }}>
                     1
                   </div>
@@ -373,7 +363,8 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    flexShrink: 0
                   }}>
                     2
                   </div>
@@ -412,7 +403,8 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    flexShrink: 0
                   }}>
                     3
                   </div>
@@ -451,7 +443,8 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    flexShrink: 0
                   }}>
                     4
                   </div>
@@ -480,6 +473,18 @@ export const HeroSection = ({ onOpenAuthModal, onExploreMap }) => {
           .hero-main-grid {
             grid-template-columns: 1fr !important;
             gap: 2.5rem !important;
+            text-align: center;
+          }
+          .hero-desc {
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .hero-cta-group {
+            justify-content: center !important;
+          }
+          .hero-value-props {
+            justify-content: center;
+            text-align: left;
           }
           .floating-badge-1, .floating-badge-2 {
             position: static !important;

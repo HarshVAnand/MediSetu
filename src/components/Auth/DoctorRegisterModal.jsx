@@ -1,3 +1,4 @@
+import "../../index.css";
 import React, { useState } from 'react';
 import { X, Stethoscope, Award, Building2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { dbPut, enqueueSyncAction } from '../../services/db.js';
@@ -10,9 +11,9 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
     email: '',
     password: '',
     uid: '',
-    currentPlaceOfPractice: 'Kolar Sub-Divisional Primary Health Centre (PHC)',
+    currentPlaceOfPractice: 'Kolar Sub-Divisional Health Centre',
     qualifications: '',
-    specialization: 'General Medicine & Rural Health',
+    specialization: 'General Medicine & Family Health',
     phone: '',
     experienceYears: '10'
   });
@@ -29,10 +30,10 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
       gender: 'Male',
       email: 'dr.ramesh@medisetu.org',
       password: 'doctor123',
-      uid: 'HPR-KMC-77419',
-      currentPlaceOfPractice: 'Kolar Sub-Divisional Primary Health Centre (PHC)',
+      uid: 'KMC-77419',
+      currentPlaceOfPractice: 'Kolar Sub-Divisional Health Centre',
       qualifications: 'MBBS, DNB (Family Medicine)',
-      specialization: 'General Medicine & Rural Health',
+      specialization: 'General Medicine & Family Health',
       phone: '+91 94498 11200',
       experienceYears: '14'
     });
@@ -43,7 +44,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
     setErrorMsg('');
 
     if (!formData.name || !formData.age || !formData.uid || !formData.currentPlaceOfPractice || !formData.qualifications || !formData.email || !formData.password) {
-      setErrorMsg('Please fill in all mandatory doctor registration fields.');
+      setErrorMsg('Please fill in all doctor registration fields.');
       return;
     }
 
@@ -76,23 +77,27 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
       onRegisterSuccess(newDoctor);
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to save doctor to IndexedDB.');
+      setErrorMsg('Failed to save doctor account.');
       setIsSubmitting(false);
     }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+      <div
+        className="modal-dialog doctor-modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: '540px' }}
+      >
         
         {/* HEADER */}
         <div className="modal-header">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="badge badge-teal">Healthcare Professional Onboarding</span>
+              <span className="badge badge-teal">Doctor & Health Worker Registration</span>
             </div>
             <h3 style={{ fontSize: '1.25rem', marginTop: '0.25rem', color: 'var(--primary-navy-dark)' }}>
-              Register as Doctor / Medical Officer
+              Register as Doctor or Health Worker
             </h3>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
@@ -144,8 +149,15 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
 
         {/* REGISTRATION FORM */}
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.85rem' }}>
-            <div className="form-group">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.2fr 0.8fr 0.8fr',
+              gap: '0.85rem',
+              marginBottom: '0.85rem'
+            }}
+          >
+            <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Doctor Name *</label>
               <input 
                 type="text" 
@@ -156,7 +168,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Age *</label>
               <input 
                 type="number" 
@@ -167,7 +179,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Gender</label>
               <select 
                 className="form-select"
@@ -181,20 +193,27 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
-            <div className="form-group">
-              <label className="form-label">UID (HPR / State Medical Council Reg No.) *</label>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.85rem',
+              marginBottom: '0.85rem'
+            }}
+          >
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Medical Registration No. / Doctor ID *</label>
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="e.g. HPR-KMC-77419" 
+                placeholder="e.g. KMC-77419" 
                 value={formData.uid}
                 onChange={(e) => setFormData({ ...formData, uid: e.target.value })}
                 required
               />
             </div>
-            <div className="form-group">
-              <label className="form-label">Qualifications *</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Degree / Qualifications *</label>
               <input 
                 type="text" 
                 className="form-input" 
@@ -207,36 +226,43 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
           </div>
 
           <div className="form-group">
-            <label className="form-label">Current Place of Practice (Facility / Clinic) *</label>
+            <label className="form-label">Hospital / Clinic / Health Centre Name *</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. Kolar Sub-Divisional Primary Health Centre (PHC)" 
+              placeholder="e.g. Kolar Sub-Divisional Health Centre" 
               value={formData.currentPlaceOfPractice}
               onChange={(e) => setFormData({ ...formData, currentPlaceOfPractice: e.target.value })}
               required
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
-            <div className="form-group">
-              <label className="form-label">Specialization / Department</label>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.2fr 0.8fr',
+              gap: '0.85rem',
+              marginBottom: '0.85rem'
+            }}
+          >
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Specialty / Role</label>
               <select 
                 className="form-select"
                 value={formData.specialization}
                 onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
               >
-                <option value="General Medicine & Rural Health">General Medicine & Rural Health</option>
-                <option value="Cardiology & Critical Care">Cardiology & Critical Care</option>
-                <option value="Obstetrics & Gynaecology">Obstetrics & Gynaecology</option>
-                <option value="Paediatrics & Neonatology">Paediatrics & Neonatology</option>
-                <option value="Emergency Surgery & Trauma">Emergency Surgery & Trauma</option>
-                <option value="Pulmonology & Chest Medicine">Pulmonology & Chest Medicine</option>
+                <option value="General Medicine & Family Health">General Medicine & Family Health</option>
+                <option value="Heart Specialist (Cardiology)">Heart Specialist (Cardiology)</option>
+                <option value="Women & Delivery (Obstetrics & Gynae)">Women & Delivery (Obstetrics & Gynae)</option>
+                <option value="Children Health (Paediatrics)">Children Health (Paediatrics)</option>
+                <option value="Bones & Joints (Orthopaedics)">Bones & Joints (Orthopaedics)</option>
+                <option value="Chest & Breathing Specialist">Chest & Breathing Specialist</option>
                 <option value="Community Health Officer">Community Health Officer (CHO)</option>
               </select>
             </div>
-            <div className="form-group">
-              <label className="form-label">Years of Experience</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Experience (Years)</label>
               <input 
                 type="number" 
                 className="form-input" 
@@ -247,9 +273,16 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.85rem' }}>
-            <div className="form-group">
-              <label className="form-label">Official Email (for Login) *</label>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.85rem',
+              marginBottom: '1.25rem'
+            }}
+          >
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Email (for Login) *</label>
               <input 
                 type="email" 
                 className="form-input" 
@@ -259,7 +292,7 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Password *</label>
               <input 
                 type="password" 
@@ -273,26 +306,24 @@ export const DoctorRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwit
           </div>
 
           {/* SUBMIT BUTTON */}
-          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="btn btn-teal btn-lg" 
-              style={{ width: '100%' }}
-            >
-              {isSubmitting ? 'Registering Practitioner Profile...' : 'Complete Doctor Registration'}
-            </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn btn-teal btn-lg"
+            style={{ width: '100%' }}
+          >
+            <span>{isSubmitting ? 'Registering...' : 'Complete Doctor Registration'}</span>
+          </button>
 
-            <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-              Already registered?{' '}
-              <button 
-                type="button" 
-                onClick={onSwitchToLogin} 
-                style={{ background: 'none', border: 'none', color: 'var(--primary-navy)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Login as Doctor
-              </button>
-            </div>
+          <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '1rem' }}>
+            Already registered?{' '}
+            <button 
+              type="button" 
+              onClick={onSwitchToLogin} 
+              style={{ background: 'none', border: 'none', color: 'var(--primary-navy)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Login as Doctor
+            </button>
           </div>
         </form>
 

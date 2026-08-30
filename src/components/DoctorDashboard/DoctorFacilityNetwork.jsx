@@ -53,7 +53,7 @@ export const DoctorFacilityNetwork = () => {
         <div style="padding: 6px; font-family: inherit; font-size: 12px;">
           <strong>${fac.name}</strong>
           <div style="font-size: 11px; color: #0d9488;">${fac.category} • ${fac.facilityType}</div>
-          <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 2px;">Vacant Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
+          <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 2px;">Available Beds: ${fac.availableBeds}/${fac.totalBeds}</div>
         </div>
       `);
 
@@ -72,7 +72,7 @@ export const DoctorFacilityNetwork = () => {
         </div>
         <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <MapPin size={20} color="var(--medical-teal)" />
-          <span>District Hospital Referral & Available Bed Capacity</span>
+          <span>Nearby Hospital Referrals & Free Bed Availability</span>
         </h3>
       </div>
 
@@ -90,7 +90,7 @@ export const DoctorFacilityNetwork = () => {
                   {selectedFacility.category === 'Government' ? '🏛️ Government' : '🏥 Private'} • {selectedFacility.facilityType}
                 </span>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy)' }}>
-                  {selectedFacility.emergency24x7 ? '🚨 24x7 Ready' : 'OPD Only'}
+                  {selectedFacility.emergency24x7 ? '🚨 24x7 Ready' : 'Clinic Hours'}
                 </span>
               </div>
 
@@ -98,31 +98,49 @@ export const DoctorFacilityNetwork = () => {
                 {selectedFacility.name}
               </h4>
 
-              <div style={{ background: '#ffffff', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '0.85rem', fontSize: '0.8rem', border: '1px solid var(--border-light)' }}>
-                <div>Total Beds: <strong>{selectedFacility.totalBeds}</strong></div>
-                <div>Currently Free: <strong style={{ color: 'var(--success-green)' }}>{selectedFacility.availableBeds} beds</strong></div>
-                <div>ICU Beds: <strong>{selectedFacility.icuBeds > 0 ? `${selectedFacility.availableIcuBeds} / ${selectedFacility.icuBeds} free` : 'No ICU'}</strong></div>
-                <div>Oxygen Beds: <strong>{selectedFacility.oxygenBeds || 10} available</strong></div>
+              <p style={{ fontSize: '0.78125rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                📍 {selectedFacility.address}
+              </p>
+
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.75rem',
+                fontSize: '0.8125rem',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.5rem',
+                marginBottom: '0.75rem'
+              }}>
+                <div>
+                  <span style={{ color: 'var(--text-subtle)' }}>Available Beds: </span>
+                  <strong style={{ color: 'var(--success-green)' }}>{selectedFacility.availableBeds}</strong> / {selectedFacility.totalBeds}
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-subtle)' }}>ICU Free: </span>
+                  <strong>{selectedFacility.availableIcuBeds || 0}</strong>
+                </div>
               </div>
 
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '0.35rem' }}>
-                  Doctors Available for Direct Case Handover:
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  {selectedFacility.doctorsOnDuty?.map((doc, didx) => (
-                    <div key={didx}>• <strong>{doc.name}</strong> — {doc.role}</div>
-                  ))}
-                </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <strong>On Duty:</strong> {selectedFacility.doctorsOnDuty?.map(d => d.name).join(', ')}
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div style={{ color: 'var(--text-subtle)', fontSize: '0.875rem' }}>
+              Click any hospital pin on the map to view available beds and on-duty specialists.
+            </div>
+          )}
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            <a href={`tel:${selectedFacility?.contact || '108'}`} className="btn btn-primary btn-sm" style={{ flex: 1, textDecoration: 'none' }}>
-              <Phone size={14} /> Call Hospital ({selectedFacility?.contact})
-            </a>
-          </div>
+          <a 
+            href={`tel:${selectedFacility?.contact}`}
+            className="btn btn-teal btn-sm"
+            style={{ width: '100%', marginTop: '1rem', textDecoration: 'none' }}
+          >
+            <Phone size={14} />
+            <span>Call Hospital ({selectedFacility?.contact})</span>
+          </a>
         </div>
       </div>
 

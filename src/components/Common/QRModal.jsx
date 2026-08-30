@@ -66,7 +66,7 @@ export const QRModal = ({ isOpen, onClose, patient, mode = 'show' }) => {
               <button 
                 onClick={handleCopy}
                 style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                title="Copy ABHA Number"
+                title="Copy Health Number"
               >
                 {copied ? <Check size={14} color="#86efac" /> : <Copy size={14} />}
               </button>
@@ -98,48 +98,65 @@ export const QRModal = ({ isOpen, onClose, patient, mode = 'show' }) => {
 
               {/* Data blocks */}
               <rect x="36" y="8" width="6" height="6" fill="#0f4c81" />
-              <rect x="46" y="8" width="8" height="6" fill="#0d9488" />
-              <rect x="58" y="8" width="6" height="6" fill="#0f4c81" />
-              <rect x="36" y="18" width="8" height="6" fill="#0d9488" />
-              <rect x="48" y="18" width="6" height="6" fill="#0f4c81" />
-              <rect x="58" y="18" width="8" height="6" fill="#0d9488" />
+              <rect x="46" y="8" width="6" height="6" fill="#0d9488" />
+              <rect x="56" y="8" width="6" height="6" fill="#0f4c81" />
+              
+              <rect x="36" y="18" width="6" height="6" fill="#0d9488" />
+              <rect x="46" y="18" width="6" height="6" fill="#0f4c81" />
+              <rect x="56" y="18" width="6" height="6" fill="#0d9488" />
 
-              <rect x="8" y="36" width="6" height="8" fill="#0f4c81" />
-              <rect x="18" y="36" width="8" height="6" fill="#0d9488" />
-              <rect x="28" y="36" width="6" height="8" fill="#0f4c81" />
-              <rect x="8" y="48" width="8" height="6" fill="#0d9488" />
-              <rect x="20" y="48" width="6" height="8" fill="#0f4c81" />
+              <rect x="36" y="28" width="6" height="6" fill="#0f4c81" />
+              <rect x="46" y="28" width="6" height="6" fill="#0d9488" />
+              <rect x="56" y="28" width="6" height="6" fill="#0f4c81" />
 
-              {/* Center Medisetu Cross */}
-              <circle cx="50" cy="50" r="16" fill="#0f4c81" />
-              <rect x="47" y="40" width="6" height="20" rx="2" fill="#ffffff" />
-              <rect x="40" y="47" width="20" height="6" rx="2" fill="#ffffff" />
+              <rect x="8" y="36" width="6" height="6" fill="#0d9488" />
+              <rect x="18" y="36" width="6" height="6" fill="#0f4c81" />
+              <rect x="28" y="36" width="6" height="6" fill="#0d9488" />
+              <rect x="38" y="36" width="6" height="6" fill="#0f4c81" />
+              <rect x="48" y="36" width="6" height="6" fill="#0d9488" />
+              <rect x="58" y="36" width="6" height="6" fill="#0f4c81" />
+              <rect x="68" y="36" width="6" height="6" fill="#0d9488" />
+              <rect x="78" y="36" width="6" height="6" fill="#0f4c81" />
+              <rect x="88" y="36" width="6" height="6" fill="#0d9488" />
 
-              <rect x="38" y="70" width="8" height="8" fill="#0d9488" />
-              <rect x="50" y="70" width="6" height="8" fill="#0f4c81" />
-              <rect x="60" y="70" width="8" height="6" fill="#0d9488" />
-              <rect x="72" y="70" width="6" height="8" fill="#0f4c81" />
-              <rect x="82" y="70" width="8" height="8" fill="#0d9488" />
+              <rect x="8" y="46" width="6" height="6" fill="#0f4c81" />
+              <rect x="28" y="46" width="6" height="6" fill="#0f4c81" />
+              <rect x="48" y="46" width="6" height="6" fill="#0f4c81" />
+              <rect x="68" y="46" width="6" height="6" fill="#0f4c81" />
+              <rect x="88" y="46" width="6" height="6" fill="#0f4c81" />
 
-              <rect x="38" y="82" width="6" height="8" fill="#0f4c81" />
-              <rect x="48" y="82" width="8" height="6" fill="#0d9488" />
-              <rect x="60" y="82" width="6" height="8" fill="#0f4c81" />
-              <rect x="70" y="82" width="8" height="8" fill="#0d9488" />
-              <rect x="82" y="82" width="6" height="6" fill="#0f4c81" />
+              <rect x="8" y="56" width="6" height="6" fill="#0d9488" />
+              <rect x="18" y="56" width="6" height="6" fill="#0d9488" />
+              <rect x="38" y="56" width="6" height="6" fill="#0d9488" />
+              <rect x="58" y="56" width="6" height="6" fill="#0d9488" />
+              <rect x="78" y="56" width="6" height="6" fill="#0d9488" />
+
+              <rect x="36" y="68" width="6" height="6" fill="#0f4c81" />
+              <rect x="46" y="68" width="6" height="6" fill="#0d9488" />
+              <rect x="56" y="68" width="6" height="6" fill="#0f4c81" />
+              <rect x="68" y="68" width="6" height="6" fill="#0d9488" />
+              <rect x="88" y="68" width="6" height="6" fill="#0f4c81" />
+
+              <rect x="36" y="78" width="6" height="6" fill="#0d9488" />
+              <rect x="46" y="78" width="6" height="6" fill="#0f4c81" />
+              <rect x="56" y="78" width="6" height="6" fill="#0d9488" />
+              <rect x="78" y="78" width="6" height="6" fill="#0d9488" />
+
+              <rect x="36" y="88" width="6" height="6" fill="#0f4c81" />
+              <rect x="46" y="88" width="6" height="6" fill="#0d9488" />
+              <rect x="56" y="88" width="6" height="6" fill="#0f4c81" />
+              <rect x="68" y="88" width="6" height="6" fill="#0f4c81" />
+              <rect x="88" y="88" width="6" height="6" fill="#0d9488" />
             </svg>
           </div>
 
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '340px', margin: '0 auto 1.5rem auto' }}>
-            Scan at any Sub-Centre, PHC, or District Hospital to instantly retrieve full longitudinal health timeline.
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+            Show this QR card to your doctor or clinic to share your medical history in 2 seconds.
           </p>
 
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-            <button className="btn btn-primary btn-sm" onClick={onClose}>
-              Done
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => window.print()}>
-              Print ID Card
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--success-green)' }}>
+            <ShieldCheck size={14} />
+            <span>100% Private & Protected</span>
           </div>
         </div>
       </div>

@@ -140,7 +140,7 @@ export const MapPreview = () => {
         </div>
 
         {/* MAP & DETAILS GRID */}
-        <div style={{
+        <div className="map-preview-grid" style={{
           display: 'grid',
           gridTemplateColumns: '1.4fr 0.6fr',
           gap: '1.5rem',
@@ -301,8 +301,8 @@ export const MapPreview = () => {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*="gridTemplateColumns: 1.4fr 0.6fr"] {
-            gridTemplateColumns: 1fr !important;
+          .map-preview-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
