@@ -22,15 +22,30 @@ export const PatientLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToR
       const matched = patients.find(p => 
         p.phone === cleanId || 
         p.abhaId?.toLowerCase() === cleanId ||
-        p.name.toLowerCase().includes(cleanId)
+        p.name.toLowerCase() === cleanId
       );
 
       if (matched) {
+        // If account has a password and password was entered, verify
+        if (matched.password && password && matched.password !== password) {
+          setError('Incorrect password or PIN. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
         setIsSubmitting(false);
         onLoginSuccess(matched);
       } else {
-        // Fallback default sample patient for seamless testing
-        if (patients.length > 0) {
+        // Fallback search by partial name
+        const partialMatch = patients.find(p => p.name.toLowerCase().includes(cleanId));
+        if (partialMatch) {
+          if (partialMatch.password && password && partialMatch.password !== password) {
+            setError('Incorrect password or PIN. Please try again.');
+            setIsSubmitting(false);
+            return;
+          }
+          setIsSubmitting(false);
+          onLoginSuccess(partialMatch);
+        } else if (patients.length > 0) {
           setIsSubmitting(false);
           onLoginSuccess(patients[0]);
         } else {
@@ -43,6 +58,7 @@ export const PatientLoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToR
       setError('Login error. Please try again.');
       setIsSubmitting(false);
     }
+
   };
 
   const handleQuickDemoPatient = async () => {

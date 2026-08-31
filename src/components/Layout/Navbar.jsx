@@ -85,7 +85,7 @@ export const Navbar = ({
 
         {/* DESKTOP NAVIGATION (Landing Page Mode) */}
         {currentRole === 'guest' && (
-          <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.115rem' }}>
             <button 
               onClick={() => handleNavClick('hero')} 
               className={`nav-link ${activeSection === 'hero' ? 'active' : ''}`}
@@ -104,13 +104,7 @@ export const Navbar = ({
             >
               📍 Find Hospitals
             </button>
-            <button 
-              onClick={() => handleNavClick('how-it-works')} 
-              className={`nav-link ${activeSection === 'how-it-works' ? 'active' : ''}`}
-              style={navLinkStyle}
-            >
-              How It Works
-            </button>
+
             <button 
               onClick={() => handleNavClick('for-patients')} 
               className={`nav-link ${activeSection === 'for-patients' ? 'active' : ''}`}
@@ -145,7 +139,7 @@ export const Navbar = ({
         {/* AUTH BUTTONS / USER PROFILE CONTROLS */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {currentRole === 'guest' ? (
-            <div className="auth-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div className="auth-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '1px' }}>
               <button 
                 id="btn-login-patient"
                 onClick={() => onOpenAuthModal('patient-login')}

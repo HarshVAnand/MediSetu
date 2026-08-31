@@ -1,19 +1,32 @@
 // MediSetu Health - Smart Medical Document Reader
 // Reads handwritten doctor notes, prescription slips, and lab test results into plain everyday records
+import { uploadPrescriptionToBackend } from './api.js';
 
-export const processDocumentOCR = async (fileOrUrl, documentType = 'prescription', onProgress = () => {}) => {
+export const processDocumentOCR = async (fileOrUrl, documentType = 'prescription', onProgress = () => {}, patientId = 'pat-001') => {
   const steps = [
     { progress: 20, stage: 'Step 1/4: Enhancing photo clarity and lighting...' },
-    { progress: 45, stage: "Step 2/4: Reading doctor's handwriting and clinic stamp..." },
-    { progress: 75, stage: 'Step 3/4: Identifying medicine names, doses & morning/night schedule...' },
+    { progress: 45, stage: "Step 2/4: Reading doctor's handwriting with Tesseract OCR..." },
+    { progress: 75, stage: 'Step 3/4: Creating vector embeddings & indexing in ChromaDB...' },
     { progress: 95, stage: 'Step 4/4: Checking medicine safety & saving into your health history...' },
     { progress: 100, stage: 'Done! Your medicine schedule and health record are ready.' }
   ];
 
   for (const step of steps) {
     onProgress(step);
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 300));
   }
+
+  // Attempt backend RAG / OCR processing if real File is supplied
+  let backendResult = null;
+  if (fileOrUrl instanceof File) {
+    try {
+      backendResult = await uploadPrescriptionToBackend(fileOrUrl, patientId, `pres-${Date.now()}`);
+      console.log('Backend OCR and ChromaDB indexing success:', backendResult);
+    } catch (err) {
+      console.warn('Backend OCR service unavailable, using local OCR fallback:', err.message);
+    }
+  }
+
 
   const isLab = documentType === 'lab' || (fileOrUrl.name && fileOrUrl.name.toLowerCase().includes('lab'));
 

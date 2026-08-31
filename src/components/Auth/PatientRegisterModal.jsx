@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Phone, MapPin, ShieldCheck, Heart, ArrowRight } from 'lucide-react';
+import { X, User, Phone, MapPin, ShieldCheck, Heart, ArrowRight, Lock, Eye, EyeOff } from 'lucide-react';
 import { dbPut, enqueueSyncAction } from '../../services/db.js';
 
 export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
@@ -7,17 +7,36 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('Male');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [bloodGroup, setBloodGroup] = useState('B+');
   const [village, setVillage] = useState('Kolar Rural, Karnataka');
   const [allergies, setAllergies] = useState('No Known Drug Allergies (NKDA)');
   const [conditions, setConditions] = useState('General Health Checkup');
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!name || !phone) return;
+    setError('');
+
+    if (!name || !phone) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter a password or 4-digit PIN for your account.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please check again.');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -31,6 +50,7 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
         age: parseInt(age, 10) || 45,
         gender,
         phone,
+        password,
         bloodGroup,
         abhaId: generatedAbha,
         address: village,
@@ -38,9 +58,9 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
         assignedAsha: 'Smt. Kavitha M. (Village Health Worker)',
         allergies: allergies ? allergies.split(',').map(a => a.trim()) : ['No Known Drug Allergies (NKDA)'],
         chronicConditions: conditions ? conditions.split(',').map(c => c.trim()) : ['General Care'],
-        aadharPhoto: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80',
         createdAt: new Date().toISOString()
       };
+
 
       await dbPut('patients', newPatient);
       await enqueueSyncAction('CREATE_PATIENT', { patientId, name });
@@ -75,6 +95,21 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: '1.5' }}>
           Connect your health records across clinics, pharmacies, and 60km nearby hospitals.
         </p>
+
+        {error && (
+          <div style={{
+            background: 'var(--urgent-bg)',
+            border: '1px solid var(--urgent-border)',
+            color: 'var(--urgent-red)',
+            padding: '0.65rem 0.85rem',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.8125rem',
+            marginBottom: '1rem',
+            fontWeight: 600
+          }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleRegister}>
           
@@ -146,6 +181,55 @@ export const PatientRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwi
                 onChange={(e) => setPhone(e.target.value)}
                 required
               />
+            </div>
+          </div>
+
+          {/* PASSWORD SECTION */}
+          <div style={{
+            background: 'var(--bg-page)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.85rem',
+            marginBottom: '0.85rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary-navy-dark)' }}>
+                <Lock size={15} color="var(--medical-teal)" />
+                <span>Account Security / Password *</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
+              >
+                {showPassword ? <><EyeOff size={13} /> Hide</> : <><Eye size={13} /> Show</>}
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Set Password / 4-Digit PIN *</label>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="form-input"
+                  placeholder="Enter secure password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Confirm Password *</label>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="form-input"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
             </div>
           </div>
 

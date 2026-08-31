@@ -6,6 +6,7 @@ import {
   fetchNearbyHospitalsLive,
   calculateDistance 
 } from '../../services/facilityData.js';
+import { sendLocationToBackend } from '../../services/api.js';
 import { 
   MapPin, 
   Phone, 
@@ -28,6 +29,7 @@ import {
   Award
 } from 'lucide-react';
 import gsap from 'gsap';
+
 
 export const HospitalFinder60km = () => {
   const mapContainerRef = useRef(null);
@@ -266,9 +268,16 @@ export const HospitalFinder60km = () => {
       });
     });
 
+    // Force Leaflet map resize calculation to ensure all tiles render cleanly
+    setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 150);
+
   }, [userLocation, radiusKm, categoryFilter, emergencyOnly, icuOnly, searchQuery, selectedHospitalId, liveDataset]);
 
-  // GPS Geolocation Handler with Live Overpass fetch
+  // GPS Geolocation Handler with Live Overpass fetch and Axios Backend logging
   const handleDetectLiveLocation = () => {
     if (!navigator.geolocation) {
       setGeoError('GPS location is not supported in your browser.');
@@ -281,13 +290,22 @@ export const HospitalFinder60km = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({
+        const newLoc = {
           name: 'Your Live GPS Location',
           lat: latitude,
           lng: longitude,
           isLiveGps: true
-        });
+        };
+
+        setUserLocation(newLoc);
         setIsLocating(false);
+
+        // Send GPS coordinate data to backend via Axios
+        try {
+          await sendLocationToBackend(latitude, longitude, radiusKm, 'Live GPS Location');
+        } catch (backendErr) {
+          console.debug('Backend location sync note:', backendErr.message);
+        }
 
         // Fetch live OpenStreetMap hospitals for this exact coordinate
         setIsLiveFetching(true);
@@ -298,13 +316,22 @@ export const HospitalFinder60km = () => {
           setLiveDataset(null);
         }
         setIsLiveFetching(false);
+
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([latitude, longitude], 11, { animate: true });
+          setTimeout(() => mapInstanceRef.current.invalidateSize(), 200);
+        }
       },
       (error) => {
         console.warn('Geolocation warning/denied:', error);
-        setGeoError('Could not fetch exact GPS. Select a nearby city preset.');
+        let msg = 'Could not fetch exact GPS. Select a nearby city preset.';
+        if (error.code === 1) msg = 'Location permission was denied. Please allow GPS access in your browser.';
+        else if (error.code === 2) msg = 'Location unavailable. Please check your GPS signal.';
+        else if (error.code === 3) msg = 'GPS request timed out. Trying nearby region.';
+        setGeoError(msg);
         setIsLocating(false);
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 12000, enableHighAccuracy: true, maximumAge: 60000 }
     );
   };
 
@@ -318,6 +345,13 @@ export const HospitalFinder60km = () => {
     });
     setGeoError(null);
 
+    // Send preset location to backend via Axios
+    try {
+      await sendLocationToBackend(region.lat, region.lng, radiusKm, region.name);
+    } catch (backendErr) {
+      console.debug('Backend location sync note:', backendErr.message);
+    }
+
     // Fetch live data for selected preset
     setIsLiveFetching(true);
     const live = await fetchNearbyHospitalsLive(region.lat, region.lng, radiusKm);
@@ -327,7 +361,13 @@ export const HospitalFinder60km = () => {
       setLiveDataset(null);
     }
     setIsLiveFetching(false);
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([region.lat, region.lng], 10, { animate: true });
+      setTimeout(() => mapInstanceRef.current.invalidateSize(), 200);
+    }
   };
+
 
   return (
     <section 

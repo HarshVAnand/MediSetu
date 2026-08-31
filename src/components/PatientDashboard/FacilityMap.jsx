@@ -4,8 +4,10 @@ import {
   INITIAL_FACILITIES, 
   PRESET_REGIONS, 
   getFacilitiesWithinRadius, 
+  fetchNearbyHospitalsLive,
   calculateDistance 
 } from '../../services/facilityData.js';
+import { sendLocationToBackend } from '../../services/api.js';
 import { 
   MapPin, 
   Phone, 
@@ -16,7 +18,8 @@ import {
   Building2, 
   Compass, 
   Radio, 
-  AlertCircle 
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 
 export const FacilityMap = () => {
@@ -29,13 +32,17 @@ export const FacilityMap = () => {
   const [userLocation, setUserLocation] = useState({
     name: 'Kolar City (Centre)',
     lat: 13.1367,
-    lng: 78.1340
+    lng: 78.1340,
+    isLiveGps: false
   });
 
   const [radiusKm, setRadiusKm] = useState(60);
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFacility, setSelectedFacility] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [geoError, setGeoError] = useState(null);
+  const [liveDataset, setLiveDataset] = useState(null);
 
   const facilities = getFacilitiesWithinRadius(
     userLocation.lat,
@@ -44,10 +51,59 @@ export const FacilityMap = () => {
     {
       category: categoryFilter,
       searchQuery
-    }
+    },
+    liveDataset
   );
 
   const currentFacility = selectedFacility || facilities[0] || null;
+
+  const handleDetectLiveLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoError('GPS location is not supported in your browser.');
+      return;
+    }
+
+    setIsLocating(true);
+    setGeoError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLoc = {
+          name: 'Your Live GPS Location',
+          lat: latitude,
+          lng: longitude,
+          isLiveGps: true
+        };
+        setUserLocation(newLoc);
+        setIsLocating(false);
+
+        // Send location to backend via Axios
+        try {
+          await sendLocationToBackend(latitude, longitude, radiusKm, 'Patient Live GPS');
+        } catch (err) {
+          console.debug('Backend location note:', err.message);
+        }
+
+        const live = await fetchNearbyHospitalsLive(latitude, longitude, radiusKm);
+        if (live && live.length > 0) setLiveDataset(live);
+        else setLiveDataset(null);
+
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([latitude, longitude], 11, { animate: true });
+          setTimeout(() => mapInstanceRef.current?.invalidateSize(), 200);
+        }
+      },
+      (error) => {
+        console.warn('Geolocation warning:', error);
+        let msg = 'Could not fetch exact GPS. Select a nearby preset.';
+        if (error.code === 1) msg = 'Location permission denied. Please allow GPS access.';
+        setGeoError(msg);
+        setIsLocating(false);
+      },
+      { timeout: 12000, enableHighAccuracy: true }
+    );
+  };
 
   const createIcon = (fac) => {
     const isGovt = fac.category === 'Government';
@@ -108,9 +164,9 @@ export const FacilityMap = () => {
     userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
       icon: L.divIcon({
         className: 'user-pin',
-        html: `<div style="width:16px;height:16px;background:#0284c7;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        html: `<div style="width:18px;height:18px;background:#0284c7;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.35);"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
       })
     }).addTo(map);
 
@@ -140,7 +196,12 @@ export const FacilityMap = () => {
       markersRef.current.push(marker);
     });
 
-  }, [userLocation, radiusKm, categoryFilter, searchQuery]);
+    setTimeout(() => {
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+    }, 200);
+
+  }, [userLocation, radiusKm, categoryFilter, searchQuery, liveDataset]);
+
 
   return (
     <div className="med-card" style={{ padding: '1.75rem' }}>
@@ -172,8 +233,49 @@ export const FacilityMap = () => {
       {/* LOCATION & RADIUS FILTER CHIPS */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
         
+        {/* Live GPS & Region Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleDetectLiveLocation}
+            disabled={isLocating}
+            className="btn btn-teal btn-sm"
+            style={{ fontSize: '0.78125rem', padding: '0.35rem 0.75rem' }}
+          >
+            <MapPin size={14} className={isLocating ? 'spin-anim' : ''} />
+            <span>{isLocating ? 'Detecting GPS...' : '📍 Use Live GPS'}</span>
+          </button>
+
+          <select 
+            className="form-input"
+            style={{
+              padding: '0.35rem 0.65rem',
+              fontSize: '0.78125rem',
+              fontWeight: 600,
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-medium)',
+              backgroundColor: '#ffffff'
+            }}
+            value={PRESET_REGIONS.find(r => r.name === userLocation.name)?.id || (userLocation.isLiveGps ? 'custom' : 'kolar-central')}
+            onChange={(e) => {
+              const found = PRESET_REGIONS.find(r => r.id === e.target.value);
+              if (found) {
+                setUserLocation({ name: found.name, lat: found.lat, lng: found.lng, isLiveGps: false });
+                setGeoError(null);
+                try {
+                  sendLocationToBackend(found.lat, found.lng, radiusKm, found.name);
+                } catch(e) {}
+              }
+            }}
+          >
+            {PRESET_REGIONS.map(r => (
+              <option key={r.id} value={r.id}>📍 {r.name}</option>
+            ))}
+            {userLocation.isLiveGps && <option value="custom">📍 My Live GPS Location</option>}
+          </select>
+        </div>
+
         {/* Category Filters */}
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {['ALL', 'Government', 'Private'].map(cat => (
             <button
               key={cat}
@@ -183,20 +285,20 @@ export const FacilityMap = () => {
                 color: categoryFilter === cat ? '#ffffff' : 'var(--text-main)',
                 border: '1px solid var(--border-medium)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '0.35rem 0.75rem',
-                fontSize: '0.78125rem',
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
             >
-              {cat === 'ALL' ? 'All Hospitals' : cat === 'Government' ? '🏛️ Government' : '🏥 Private'}
+              {cat === 'ALL' ? 'All' : cat === 'Government' ? '🏛️ Govt' : '🏥 Pvt'}
             </button>
           ))}
         </div>
 
         {/* Radius Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.78125rem', fontWeight: 700, color: 'var(--text-muted)' }}>Radius:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Radius:</span>
           {[25, 50, 60, 80].map(km => (
             <button
               key={km}
@@ -206,7 +308,7 @@ export const FacilityMap = () => {
                 color: radiusKm === km ? '#ffffff' : 'var(--text-main)',
                 border: '1px solid var(--border-medium)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '0.25rem 0.55rem',
+                padding: '0.25rem 0.5rem',
                 fontSize: '0.75rem',
                 fontWeight: radiusKm === km ? 800 : 600,
                 cursor: 'pointer'
@@ -218,6 +320,14 @@ export const FacilityMap = () => {
         </div>
 
       </div>
+
+      {geoError && (
+        <div style={{ fontSize: '0.75rem', color: 'var(--warning-amber)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <AlertCircle size={13} />
+          <span>{geoError}</span>
+        </div>
+      )}
+
 
       {/* MAP & HOSPITAL DETAILS */}
       <div style={{

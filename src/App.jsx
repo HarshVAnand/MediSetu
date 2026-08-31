@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { 
   dbGetAll, 
   dbGetById, 
@@ -58,14 +59,394 @@ import {
   GitPullRequest, 
   MapPin, 
   Sparkles, 
-  FileText, 
-  UserCheck, 
   HeartHandshake, 
-  Stethoscope, 
   Building2 
 } from 'lucide-react';
 
+/* =========================================================================
+   PATIENT DASHBOARD ROUTE WRAPPER COMPONENT
+   ========================================================================= */
+function PatientDashboardWrapper({
+  currentUser,
+  currentRole,
+  onOpenAuthModal,
+  setQrModalOpen,
+  refreshAllData,
+  showToast,
+  prescriptions,
+  records,
+  referrals,
+  followups
+}) {
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const activePatientTab = tab || 'timeline';
+
+  // If user is not logged in as a patient, prompt login
+  if (currentRole !== 'patient' || !currentUser) {
+    return (
+      <div className="app-container" style={{ padding: '4rem 1.5rem', textAlign: 'center' }}>
+        <div className="med-card" style={{ maxWidth: '520px', margin: '0 auto', padding: '2.5rem' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--medical-teal-subtle)',
+            color: 'var(--medical-teal)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.25rem'
+          }}>
+            <Activity size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.4rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+            Patient Portal Login Required
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Please log in or register to view your digital health record, prescriptions, and test results.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+            <button 
+              onClick={() => onOpenAuthModal('patient-login')}
+              className="btn btn-teal"
+            >
+              Login with Phone / Health ID
+            </button>
+            <button 
+              onClick={() => onOpenAuthModal('patient-register')}
+              className="btn btn-secondary"
+            >
+              Create Free Account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const patientPrescriptions = prescriptions.filter(p => p.patientId === currentUser.id);
+  const patientRecords = records.filter(r => r.patientId === currentUser.id);
+  const patientReferrals = referrals.filter(r => r.patientId === currentUser.id);
+  const patientFollowups = followups.filter(f => f.patientId === currentUser.id);
+
+  return (
+    <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
+      {/* PATIENT HEADER CARD */}
+      <PatientHeader 
+        patient={currentUser}
+        onOpenQRModal={() => setQrModalOpen(true)}
+        onOpenUploadModal={() => navigate('/patient/upload')}
+      />
+
+      {/* DASHBOARD TAB NAVIGATION */}
+      <div className="tabs-container">
+        <button 
+          onClick={() => navigate('/patient/timeline')}
+          className={`tab-btn ${activePatientTab === 'timeline' ? 'active' : ''}`}
+        >
+          <Activity size={16} />
+          <span>Health History</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/patient/prescriptions')}
+          className={`tab-btn ${activePatientTab === 'prescriptions' ? 'active' : ''}`}
+        >
+          <Pill size={16} />
+          <span>Medicine Schedule</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/patient/upload')}
+          className={`tab-btn ${activePatientTab === 'upload' ? 'active' : ''}`}
+        >
+          <Upload size={16} />
+          <span>Scan Doctor Slip</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/patient/referrals')}
+          className={`tab-btn ${activePatientTab === 'referrals' ? 'active' : ''}`}
+        >
+          <GitPullRequest size={16} />
+          <span>Hospital Referrals ({patientReferrals.length})</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/patient/facilities')}
+          className={`tab-btn ${activePatientTab === 'facilities' ? 'active' : ''}`}
+        >
+          <MapPin size={16} />
+          <span>Find Hospitals (60km)</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/patient/assistant')}
+          className={`tab-btn ${activePatientTab === 'assistant' ? 'active' : ''}`}
+        >
+          <Sparkles size={16} />
+          <span>Ask Health Questions</span>
+        </button>
+      </div>
+
+      {/* TAB CONTENTS */}
+      {activePatientTab === 'timeline' && (
+        <HealthTimeline 
+          patient={currentUser}
+          records={patientRecords}
+          prescriptions={patientPrescriptions}
+        />
+      )}
+
+      {activePatientTab === 'prescriptions' && (
+        <PrescriptionsView 
+          prescriptions={patientPrescriptions}
+          patient={currentUser}
+        />
+      )}
+
+      {activePatientTab === 'upload' && (
+        <DocumentUploadOCR 
+          patient={currentUser}
+          onUploadComplete={(newRec) => {
+            refreshAllData();
+            showToast('success', 'Document Saved', 'Your doctor slip was read and added to your health history.');
+            navigate('/patient/timeline');
+          }}
+        />
+      )}
+
+      {activePatientTab === 'referrals' && (
+        <ReferralTracker 
+          referrals={patientReferrals}
+          followups={patientFollowups}
+          patient={currentUser}
+        />
+      )}
+
+      {activePatientTab === 'facilities' && (
+        <FacilityMap />
+      )}
+
+      {activePatientTab === 'assistant' && (
+        <PatientAIAssistant 
+          patient={currentUser}
+          prescriptions={patientPrescriptions}
+          records={patientRecords}
+        />
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
+   DOCTOR DASHBOARD ROUTE WRAPPER COMPONENT
+   ========================================================================= */
+function DoctorDashboardWrapper({
+  currentUser,
+  currentRole,
+  onOpenAuthModal,
+  setQrModalOpen,
+  patients,
+  activePatientForDoctor,
+  setActivePatientForDoctor,
+  refreshAllData,
+  showToast,
+  prescriptions,
+  records,
+  referrals,
+  followups
+}) {
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const activeDoctorTab = tab || 'dossier';
+
+  // If user is not logged in as a doctor, prompt login
+  if (currentRole !== 'doctor' || !currentUser) {
+    return (
+      <div className="app-container" style={{ padding: '4rem 1.5rem', textAlign: 'center' }}>
+        <div className="med-card" style={{ maxWidth: '520px', margin: '0 auto', padding: '2.5rem' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'var(--accent-cyan-subtle)',
+            color: 'var(--primary-navy)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.25rem'
+          }}>
+            <Building2 size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.4rem', color: 'var(--primary-navy-dark)', marginBottom: '0.5rem' }}>
+            Doctor & Specialist Login Required
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Please log in with your healthcare credentials to access clinical summaries, e-prescribing, and referrals.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+            <button 
+              onClick={() => onOpenAuthModal('doctor-login')}
+              className="btn btn-outline-teal"
+            >
+              Doctor / Specialist Login
+            </button>
+            <button 
+              onClick={() => onOpenAuthModal('doctor-register')}
+              className="btn btn-teal"
+            >
+              Register as Healthcare Provider
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const patientPrescriptions = prescriptions.filter(p => p.patientId === activePatientForDoctor?.id);
+  const patientRecords = records.filter(r => r.patientId === activePatientForDoctor?.id);
+  const patientReferrals = referrals.filter(r => r.patientId === activePatientForDoctor?.id);
+  const patientFollowups = followups.filter(f => f.patientId === activePatientForDoctor?.id);
+
+  return (
+    <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
+      {/* DOCTOR HEADER & ACTIVE CASE SWITCHER */}
+      <DoctorHeader 
+        doctor={currentUser}
+        patients={patients}
+        activePatient={activePatientForDoctor}
+        onSelectPatient={(p) => setActivePatientForDoctor(p)}
+      />
+
+      {/* FAST PATIENT LOOKUP BAR */}
+      <PatientSearch 
+        patients={patients}
+        onSelectPatient={(p) => {
+          setActivePatientForDoctor(p);
+          showToast('info', 'Patient Selected', `Loaded records for ${p.name}.`);
+        }}
+        onOpenQRScanner={() => setQrModalOpen(true)}
+      />
+
+      {/* DOCTOR DASHBOARD TABS */}
+      <div className="tabs-container">
+        <button 
+          onClick={() => navigate('/doctor/dossier')}
+          className={`tab-btn ${activeDoctorTab === 'dossier' ? 'active' : ''}`}
+        >
+          <Sparkles size={16} />
+          <span>2-Second Patient Summary</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/doctor/prescribe')}
+          className={`tab-btn ${activeDoctorTab === 'prescribe' ? 'active' : ''}`}
+        >
+          <Pill size={16} />
+          <span>Write Prescription</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/doctor/referral')}
+          className={`tab-btn ${activeDoctorTab === 'referral' ? 'active' : ''}`}
+        >
+          <Building2 size={16} />
+          <span>Send to Hospital / Specialist</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/doctor/asha-tasks')}
+          className={`tab-btn ${activeDoctorTab === 'asha-tasks' ? 'active' : ''}`}
+        >
+          <HeartHandshake size={16} />
+          <span>Assign Home Checkup (ASHA)</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/doctor/timeline')}
+          className={`tab-btn ${activeDoctorTab === 'timeline' ? 'active' : ''}`}
+        >
+          <Activity size={16} />
+          <span>Health History</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/doctor/network')}
+          className={`tab-btn ${activeDoctorTab === 'network' ? 'active' : ''}`}
+        >
+          <MapPin size={16} />
+          <span>60km Hospital Network</span>
+        </button>
+      </div>
+
+      {/* TAB CONTENTS */}
+      {activeDoctorTab === 'dossier' && (
+        <AIRAGPatientDossier 
+          patient={activePatientForDoctor}
+          prescriptions={patientPrescriptions}
+          records={patientRecords}
+          referrals={patientReferrals}
+        />
+      )}
+
+      {activeDoctorTab === 'prescribe' && (
+        <CreatePrescription 
+          doctor={currentUser}
+          patient={activePatientForDoctor}
+          onPrescriptionCreated={() => {
+            refreshAllData();
+            showToast('success', 'Prescription Saved', `Prescription saved to ${activePatientForDoctor?.name}'s file.`);
+          }}
+        />
+      )}
+
+      {activeDoctorTab === 'referral' && (
+        <IssueReferral 
+          doctor={currentUser}
+          patient={activePatientForDoctor}
+          onReferralCreated={() => {
+            refreshAllData();
+            showToast('success', 'Referral Sent', `Hospital referral created for ${activePatientForDoctor?.name}.`);
+          }}
+        />
+      )}
+
+      {activeDoctorTab === 'asha-tasks' && (
+        <ASHATaskDelegation 
+          doctor={currentUser}
+          patient={activePatientForDoctor}
+          followups={patientFollowups}
+          onTaskCreated={() => {
+            refreshAllData();
+            showToast('success', 'Home Task Assigned', `Follow-up sent to ${activePatientForDoctor?.assignedAsha || 'ASHA worker'}.`);
+          }}
+        />
+      )}
+
+      {activeDoctorTab === 'timeline' && (
+        <HealthTimeline 
+          patient={activePatientForDoctor}
+          records={patientRecords}
+          prescriptions={patientPrescriptions}
+        />
+      )}
+
+      {activeDoctorTab === 'network' && (
+        <DoctorFacilityNetwork />
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
+   MAIN APP COMPONENT WITH REACT ROUTER
+   ========================================================================= */
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Navigation & Role State
   const [currentRole, setCurrentRole] = useState('guest'); // 'guest' | 'patient' | 'doctor'
   const [currentUser, setCurrentUser] = useState(null);
@@ -73,10 +454,6 @@ export default function App() {
 
   // Active Patient for Doctor View
   const [activePatientForDoctor, setActivePatientForDoctor] = useState(null);
-
-  // Dashboard Tabs
-  const [activePatientTab, setActivePatientTab] = useState('timeline');
-  const [activeDoctorTab, setActiveDoctorTab] = useState('dossier');
 
   // Network & Sync State
   const [isOnline, setIsOnline] = useState(true);
@@ -165,8 +542,8 @@ export default function App() {
     setCurrentUser(patient);
     setCurrentRole('patient');
     setActiveAuthModal(null);
-    setActivePatientTab('timeline');
     showToast('success', 'Welcome Back', `Logged in as ${patient.name}.`);
+    navigate('/patient/timeline');
     if (window.lenis) {
       window.lenis.scrollTo(0, { duration: 0.8 });
     } else {
@@ -180,6 +557,7 @@ export default function App() {
     setActiveAuthModal(null);
     refreshAllData();
     showToast('success', 'Health Profile Created', `Welcome ${newPatient.name}! Your free health record is ready.`);
+    navigate('/patient/timeline');
     if (window.lenis) {
       window.lenis.scrollTo(0, { duration: 0.8 });
     } else {
@@ -191,8 +569,8 @@ export default function App() {
     setCurrentUser(doctor);
     setCurrentRole('doctor');
     setActiveAuthModal(null);
-    setActiveDoctorTab('dossier');
     showToast('success', 'Doctor Logged In', `Welcome ${doctor.name}.`);
+    navigate('/doctor/dossier');
     if (window.lenis) {
       window.lenis.scrollTo(0, { duration: 0.8 });
     } else {
@@ -206,6 +584,7 @@ export default function App() {
     setActiveAuthModal(null);
     refreshAllData();
     showToast('success', 'Doctor Account Created', `Welcome ${newDoctor.name}.`);
+    navigate('/doctor/dossier');
     if (window.lenis) {
       window.lenis.scrollTo(0, { duration: 0.8 });
     } else {
@@ -218,6 +597,7 @@ export default function App() {
     setCurrentUser(null);
     setActiveSection('hero');
     showToast('info', 'Logged Out', 'Switched to MediSetu public view.');
+    navigate('/');
     if (window.lenis) {
       window.lenis.scrollTo(0, { duration: 0.8 });
     } else {
@@ -225,40 +605,64 @@ export default function App() {
     }
   };
 
-  // Smooth Section Navigation via Lenis
+  // Smooth Section Navigation via Lenis & React Router
   const handleNavigate = (sectionId) => {
     setActiveSection(sectionId);
+
     if (sectionId === 'landing' || sectionId === 'hero') {
-      if (currentRole !== 'guest') setCurrentRole('guest');
-      if (window.lenis) {
-        window.lenis.scrollTo(0, { duration: 1.2 });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (location.pathname !== '/') {
+        navigate('/');
       }
+      setTimeout(() => {
+        if (window.lenis) {
+          window.lenis.scrollTo(0, { duration: 1.0 });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 50);
+      return;
+    }
+
+    if (sectionId === 'facilities') {
+      if (location.pathname !== '/' && location.pathname !== '/facilities') {
+        navigate('/facilities');
+        return;
+      }
+      const el = document.getElementById('facilities');
+      if (el) {
+        if (window.lenis) {
+          window.lenis.scrollTo(el, { offset: -70, duration: 1.0 });
+        } else {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      return;
+    }
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          if (window.lenis) {
+            window.lenis.scrollTo(el, { offset: -70, duration: 1.0 });
+          } else {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }, 100);
       return;
     }
 
     const el = document.getElementById(sectionId);
     if (el) {
       if (window.lenis) {
-        window.lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+        window.lenis.scrollTo(el, { offset: -70, duration: 1.0 });
       } else {
         el.scrollIntoView({ behavior: 'smooth' });
       }
-    } else {
-      if (window.lenis) {
-        window.lenis.scrollTo(0, { duration: 1.2 });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
     }
   };
-
-  // Filtered collections for active patient
-  const patientPrescriptions = prescriptions.filter(p => p.patientId === (currentRole === 'patient' ? currentUser?.id : activePatientForDoctor?.id));
-  const patientRecords = records.filter(r => r.patientId === (currentRole === 'patient' ? currentUser?.id : activePatientForDoctor?.id));
-  const patientReferrals = referrals.filter(r => r.patientId === (currentRole === 'patient' ? currentUser?.id : activePatientForDoctor?.id));
-  const patientFollowups = followups.filter(f => f.patientId === (currentRole === 'patient' ? currentUser?.id : activePatientForDoctor?.id));
 
   return (
     <div className="page-wrapper">
@@ -327,272 +731,129 @@ export default function App() {
         onSwitchToLogin={() => setActiveAuthModal('doctor-login')}
       />
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN ROUTED CONTENT */}
       <main style={{ flex: 1 }}>
-        
-        {/* VIEW 1: LANDING PAGE (GUEST ROLE) */}
-        {currentRole === 'guest' && (
-          <div>
-            <HeroSection 
-              onOpenAuthModal={(type) => setActiveAuthModal(type)}
-              onExploreMap={() => handleNavigate('facilities')}
-            />
-            
-            {/* 60KM RADIUS HOSPITAL FINDER (GOVERNMENT & PRIVATE) */}
-            <HospitalFinder60km />
+        <Routes>
+          {/* LANDING PAGE ROUTE */}
+          <Route 
+            path="/" 
+            element={
+              <div>
+                <HeroSection 
+                  onOpenAuthModal={(type) => setActiveAuthModal(type)}
+                  onExploreMap={() => handleNavigate('facilities')}
+                />
+                <HospitalFinder60km />
+                <HowItWorks />
+                <RoleShowcase onOpenAuthModal={(type) => setActiveAuthModal(type)} />
+                <FeaturesGrid />
+                <StatsImpact />
+                <TrustSecurity onOpenAuthModal={(type) => setActiveAuthModal(type)} />
+              </div>
+            } 
+          />
 
-            <HowItWorks />
-            <RoleShowcase onOpenAuthModal={(type) => setActiveAuthModal(type)} />
-            <FeaturesGrid />
-            <StatsImpact />
-            <TrustSecurity onOpenAuthModal={(type) => setActiveAuthModal(type)} />
-          </div>
-        )}
+          {/* DEDICATED FACILITY / HOSPITAL FINDER ROUTE */}
+          <Route 
+            path="/facilities" 
+            element={
+              <div>
+                <div style={{ background: 'var(--primary-navy-dark)', color: '#fff', padding: '3rem 1.5rem 1rem', textAlign: 'center' }}>
+                  <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 0.5rem' }}>
+                    60km Hospital & Healthcare Network
+                  </h1>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.95rem', maxWidth: '600px', margin: '0 auto' }}>
+                    Find government PHCs, sub-centres, blood banks, and multi-specialty hospitals within 60km.
+                  </p>
+                </div>
+                <HospitalFinder60km />
+              </div>
+            } 
+          />
 
-        {/* VIEW 2: PATIENT DASHBOARD */}
-        {currentRole === 'patient' && currentUser && (
-          <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
-            
-            {/* PATIENT HEADER CARD */}
-            <PatientHeader 
-              patient={currentUser}
-              onOpenQRModal={() => setQrModalOpen(true)}
-              onOpenUploadModal={() => setActivePatientTab('upload')}
-            />
-
-            {/* DASHBOARD TAB NAVIGATION IN PLAIN TERMS */}
-            <div className="tabs-container">
-              <button 
-                onClick={() => setActivePatientTab('timeline')}
-                className={`tab-btn ${activePatientTab === 'timeline' ? 'active' : ''}`}
-              >
-                <Activity size={16} />
-                <span>Health History</span>
-              </button>
-
-              <button 
-                onClick={() => setActivePatientTab('prescriptions')}
-                className={`tab-btn ${activePatientTab === 'prescriptions' ? 'active' : ''}`}
-              >
-                <Pill size={16} />
-                <span>Medicine Schedule</span>
-              </button>
-
-              <button 
-                onClick={() => setActivePatientTab('upload')}
-                className={`tab-btn ${activePatientTab === 'upload' ? 'active' : ''}`}
-              >
-                <Upload size={16} />
-                <span>Scan Doctor Slip</span>
-              </button>
-
-              <button 
-                onClick={() => setActivePatientTab('referrals')}
-                className={`tab-btn ${activePatientTab === 'referrals' ? 'active' : ''}`}
-              >
-                <GitPullRequest size={16} />
-                <span>Hospital Referrals ({patientReferrals.length})</span>
-              </button>
-
-              <button 
-                onClick={() => setActivePatientTab('facilities')}
-                className={`tab-btn ${activePatientTab === 'facilities' ? 'active' : ''}`}
-              >
-                <MapPin size={16} />
-                <span>Find Hospitals (60km)</span>
-              </button>
-
-              <button 
-                onClick={() => setActivePatientTab('assistant')}
-                className={`tab-btn ${activePatientTab === 'assistant' ? 'active' : ''}`}
-              >
-                <Sparkles size={16} />
-                <span>Ask Health Questions</span>
-              </button>
-            </div>
-
-            {/* TAB CONTENTS */}
-            {activePatientTab === 'timeline' && (
-              <HealthTimeline 
-                patient={currentUser}
-                records={patientRecords}
-                prescriptions={patientPrescriptions}
+          {/* PATIENT PORTAL ROUTES */}
+          <Route 
+            path="/patient" 
+            element={
+              <PatientDashboardWrapper 
+                currentUser={currentUser}
+                currentRole={currentRole}
+                onOpenAuthModal={(modalType) => setActiveAuthModal(modalType)}
+                setQrModalOpen={setQrModalOpen}
+                refreshAllData={refreshAllData}
+                showToast={showToast}
+                prescriptions={prescriptions}
+                records={records}
+                referrals={referrals}
+                followups={followups}
               />
-            )}
+            } 
+          />
 
-            {activePatientTab === 'prescriptions' && (
-              <PrescriptionsView 
-                prescriptions={patientPrescriptions}
-                patient={currentUser}
+          <Route 
+            path="/patient/:tab" 
+            element={
+              <PatientDashboardWrapper 
+                currentUser={currentUser}
+                currentRole={currentRole}
+                onOpenAuthModal={(modalType) => setActiveAuthModal(modalType)}
+                setQrModalOpen={setQrModalOpen}
+                refreshAllData={refreshAllData}
+                showToast={showToast}
+                prescriptions={prescriptions}
+                records={records}
+                referrals={referrals}
+                followups={followups}
               />
-            )}
+            } 
+          />
 
-            {activePatientTab === 'upload' && (
-              <DocumentUploadOCR 
-                patient={currentUser}
-                onUploadComplete={(newRec) => {
-                  refreshAllData();
-                  showToast('success', 'Document Saved', 'Your doctor slip was read and added to your health history.');
-                  setActivePatientTab('timeline');
-                }}
+          {/* DOCTOR PORTAL ROUTES */}
+          <Route 
+            path="/doctor" 
+            element={
+              <DoctorDashboardWrapper 
+                currentUser={currentUser}
+                currentRole={currentRole}
+                onOpenAuthModal={(modalType) => setActiveAuthModal(modalType)}
+                setQrModalOpen={setQrModalOpen}
+                patients={patients}
+                activePatientForDoctor={activePatientForDoctor}
+                setActivePatientForDoctor={setActivePatientForDoctor}
+                refreshAllData={refreshAllData}
+                showToast={showToast}
+                prescriptions={prescriptions}
+                records={records}
+                referrals={referrals}
+                followups={followups}
               />
-            )}
+            } 
+          />
 
-            {activePatientTab === 'referrals' && (
-              <ReferralTracker 
-                referrals={patientReferrals}
-                followups={patientFollowups}
-                patient={currentUser}
+          <Route 
+            path="/doctor/:tab" 
+            element={
+              <DoctorDashboardWrapper 
+                currentUser={currentUser}
+                currentRole={currentRole}
+                onOpenAuthModal={(modalType) => setActiveAuthModal(modalType)}
+                setQrModalOpen={setQrModalOpen}
+                patients={patients}
+                activePatientForDoctor={activePatientForDoctor}
+                setActivePatientForDoctor={setActivePatientForDoctor}
+                refreshAllData={refreshAllData}
+                showToast={showToast}
+                prescriptions={prescriptions}
+                records={records}
+                referrals={referrals}
+                followups={followups}
               />
-            )}
+            } 
+          />
 
-            {activePatientTab === 'facilities' && (
-              <FacilityMap />
-            )}
-
-            {activePatientTab === 'assistant' && (
-              <PatientAIAssistant 
-                patient={currentUser}
-                prescriptions={patientPrescriptions}
-                records={patientRecords}
-              />
-            )}
-
-          </div>
-        )}
-
-        {/* VIEW 3: DOCTOR / HEALTHCARE WORKER DASHBOARD */}
-        {currentRole === 'doctor' && currentUser && (
-          <div className="app-container" style={{ padding: '2rem 1.5rem' }}>
-            
-            {/* DOCTOR HEADER & ACTIVE CASE SWITCHER */}
-            <DoctorHeader 
-              doctor={currentUser}
-              patients={patients}
-              activePatient={activePatientForDoctor}
-              onSelectPatient={(p) => setActivePatientForDoctor(p)}
-            />
-
-            {/* FAST PATIENT LOOKUP BAR */}
-            <PatientSearch 
-              patients={patients}
-              onSelectPatient={(p) => {
-                setActivePatientForDoctor(p);
-                showToast('info', 'Patient Selected', `Loaded records for ${p.name}.`);
-              }}
-              onOpenQRScanner={() => setQrModalOpen(true)}
-            />
-
-            {/* DOCTOR DASHBOARD TABS IN PLAIN TERMS */}
-            <div className="tabs-container">
-              <button 
-                onClick={() => setActiveDoctorTab('dossier')}
-                className={`tab-btn ${activeDoctorTab === 'dossier' ? 'active' : ''}`}
-              >
-                <Sparkles size={16} />
-                <span>2-Second Patient Summary</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveDoctorTab('prescribe')}
-                className={`tab-btn ${activeDoctorTab === 'prescribe' ? 'active' : ''}`}
-              >
-                <Pill size={16} />
-                <span>Write Prescription</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveDoctorTab('referral')}
-                className={`tab-btn ${activeDoctorTab === 'referral' ? 'active' : ''}`}
-              >
-                <Building2 size={16} />
-                <span>Send to Hospital / Specialist</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveDoctorTab('asha-tasks')}
-                className={`tab-btn ${activeDoctorTab === 'asha-tasks' ? 'active' : ''}`}
-              >
-                <HeartHandshake size={16} />
-                <span>Assign Home Checkup (ASHA)</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveDoctorTab('timeline')}
-                className={`tab-btn ${activeDoctorTab === 'timeline' ? 'active' : ''}`}
-              >
-                <Activity size={16} />
-                <span>Health History</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveDoctorTab('network')}
-                className={`tab-btn ${activeDoctorTab === 'network' ? 'active' : ''}`}
-              >
-                <MapPin size={16} />
-                <span>60km Hospital Network</span>
-              </button>
-            </div>
-
-            {/* TAB CONTENTS */}
-            {activeDoctorTab === 'dossier' && (
-              <AIRAGPatientDossier 
-                patient={activePatientForDoctor}
-                prescriptions={patientPrescriptions}
-                records={patientRecords}
-                referrals={patientReferrals}
-              />
-            )}
-
-            {activeDoctorTab === 'prescribe' && (
-              <CreatePrescription 
-                doctor={currentUser}
-                patient={activePatientForDoctor}
-                onPrescriptionCreated={() => {
-                  refreshAllData();
-                  showToast('success', 'Prescription Saved', `Prescription saved to ${activePatientForDoctor?.name}'s file.`);
-                }}
-              />
-            )}
-
-            {activeDoctorTab === 'referral' && (
-              <IssueReferral 
-                doctor={currentUser}
-                patient={activePatientForDoctor}
-                onReferralCreated={() => {
-                  refreshAllData();
-                  showToast('success', 'Referral Sent', `Hospital referral created for ${activePatientForDoctor?.name}.`);
-                }}
-              />
-            )}
-
-            {activeDoctorTab === 'asha-tasks' && (
-              <ASHATaskDelegation 
-                doctor={currentUser}
-                patient={activePatientForDoctor}
-                followups={patientFollowups}
-                onTaskCreated={() => {
-                  refreshAllData();
-                  showToast('success', 'Home Task Assigned', `Follow-up sent to ${activePatientForDoctor?.assignedAsha || 'ASHA worker'}.`);
-                }}
-              />
-            )}
-
-            {activeDoctorTab === 'timeline' && (
-              <HealthTimeline 
-                patient={activePatientForDoctor}
-                records={patientRecords}
-                prescriptions={patientPrescriptions}
-              />
-            )}
-
-            {activeDoctorTab === 'network' && (
-              <DoctorFacilityNetwork />
-            )}
-
-          </div>
-        )}
-
+          {/* CATCH-ALL REDIRECT */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
 
       {/* FOOTER */}

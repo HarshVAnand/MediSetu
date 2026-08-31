@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, QrCode, AlertTriangle, Heart, ShieldCheck, MapPin, Activity, Droplets } from 'lucide-react';
+import { UserIllustration } from '../Common/UserIllustration.jsx';
 
 export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => {
   if (!patient) return null;
@@ -22,22 +23,12 @@ export const PatientHeader = ({ patient, onOpenQRModal, onOpenUploadModal }) => 
         
         {/* LEFT: PATIENT IDENTITY */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{
-            position: 'relative',
-            width: '72px',
-            height: '72px',
-            borderRadius: 'var(--radius-lg)',
-            overflow: 'hidden',
-            border: '2px solid var(--medical-teal)',
-            boxShadow: 'var(--shadow-sm)',
-            flexShrink: 0
-          }}>
-            <img 
-              src={patient.aadharPhoto || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80'} 
-              alt={patient.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
+          <UserIllustration 
+            gender={patient.gender} 
+            size={72} 
+            name={patient.name} 
+          />
+
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.25rem' }}>

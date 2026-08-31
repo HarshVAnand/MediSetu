@@ -1,11 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
+import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { seedInitialDatabase } from './services/db.js';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
 
 // Register GSAP Plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -47,6 +50,9 @@ initLenisSmoothScroll();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter basename={import.meta.env.BASE_URL || '/'}>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
+

@@ -1,5 +1,6 @@
 // MediSetu Health - Smart Health Summary & Regional Question Answering
 // Generates clear everyday summaries for doctors and answers patient questions in plain language
+import { askQuestionToBackend } from './api.js';
 
 export const generateDoctorRAGDossier = (patient, prescriptions = [], records = [], referrals = []) => {
   if (!patient) return null;
@@ -98,7 +99,25 @@ export const generateDoctorRAGDossier = (patient, prescriptions = [], records = 
 };
 
 export const queryPatientAI = async (query, patient, prescriptions = [], records = [], language = 'en') => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // First attempt backend Groq + ChromaDB RAG if patient is selected
+  if (patient?.id) {
+    try {
+      const backendRes = await askQuestionToBackend(query, patient.id);
+      if (backendRes && backendRes.answer && !backendRes.answer.includes('No relevant information was found')) {
+        return {
+          query,
+          answer: backendRes.answer,
+          language,
+          sources: backendRes.sources?.map(s => `Prescription #${s.prescriptionId || 'Indexed Record'}`) || ['ChromaDB Medical Vector Store'],
+          generatedAt: new Date().toLocaleTimeString()
+        };
+      }
+    } catch (err) {
+      console.warn('Backend RAG service unavailable, utilizing local AI engine:', err.message);
+    }
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 350));
 
   const q = query.toLowerCase();
   const patName = patient?.name || 'Patient';
@@ -112,7 +131,7 @@ export const queryPatientAI = async (query, patient, prescriptions = [], records
 
   if (q.includes('paracetamol') || q.includes('fever') || q.includes('pain') || q.includes('headache')) {
     const hasPenicillinAllergy = allergies.some(a => a.toLowerCase().includes('penicillin'));
-    answerEn = `Yes, Paracetamol (500mg or 650mg) is safe for fever or mild pain. Because you have a recorded allergy to **${allergies[0] || 'Penicillin'}**, do NOT take any painkiller combination containing penicillin. Take Paracetamol after food with water. If fever lasts more than 2 days, visit ${patient.primaryCareUnit || 'your local clinic'}.`;
+    answerEn = `Yes, Paracetamol (500mg or 650mg) is safe for fever or mild pain. Because you have a recorded allergy to **${allergies[0] || 'Penicillin'}**, do NOT take any painkiller combination containing penicillin. Take Paracetamol after food with water. If fever lasts more than 2 days, visit ${patient?.primaryCareUnit || 'your local clinic'}.`;
     answerHi = `हाँ, बुखार या दर्द के लिए आप पैरासिटामोल ले सकते हैं। आपको **${allergies[0] || 'पेनिसिलिन'}** से एलर्जी है, इसलिए कोई भी अनजान एंटीबायोटिक न लें। गोली हमेशा खाना खाने के बाद लें। यदि बुखार 2 दिन से अधिक रहता है, तो तुरंत डॉक्टर को दिखाएं।`;
     answerKn = `ಹೌದು, ಜ್ವರ ಅಥವಾ ತಲೆನೋವಿಗೆ ನೀವು ಪ್ಯಾರಸಿಟಮಾಲ್ ತೆಗೆದುಕೊಳ್ಳಬಹುದು. ನಿಮಗೆ **${allergies[0] || 'ಪೆನ್ಸಿಲಿನ್'}** ಅಲರ್ಜಿ ಇರುವುದರಿಂದ, ಯಾವುದೇ ಅಪರಿಚಿತ ಮಾತ್ರೆಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಬೇಡಿ. ಊಟದ ನಂತರ ನೀರು ಕುಡಿದು ಸೇವಿಸಿ.`;
     sources = ['Prescription: Local Clinic August 2026', 'Allergy Card: Verified Health Record'];
@@ -141,3 +160,4 @@ export const queryPatientAI = async (query, patient, prescriptions = [], records
     generatedAt: new Date().toLocaleTimeString()
   };
 };
+
